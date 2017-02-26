@@ -1,0 +1,21 @@
+# depslib dependency file v1.0
+1487905895 source:c:\users\333da\desktop\fefu\djonson\pascal\main.cpp
+	<iostream>
+	"scanner.h"
+	<direct.h>
+	<string>
+
+1488023353 c:\users\333da\desktop\fefu\djonson\pascal\scanner.h
+	<map>
+	<string>
+	<fstream>
+	<iostream>
+	<set>
+	<vector>
+	<stdlib.h>
+	<sstream>
+	<iomanip>
+
+1488023325 source:c:\users\333da\desktop\fefu\djonson\pascal\scanner.cpp
+	"scanner.h"
+

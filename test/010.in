@@ -1,0 +1,34 @@
+
+
+
+function fac(n: integer): integer;
+var
+  p, i: integer;
+begin
+  p:=1;
+  for i:=2 to n do
+    p:=p*i;
+
+  fac:=p;
+end;
+
+procedure express(a, b, c : real);
+var
+  z : real;
+begin
+  z:=a + b + c;
+  x:=sqr(z);
+  y:=sqrt(z);
+end ;
+
+program HelloWorld;
+var
+    int : integer;
+    r : real;
+begin
+  for i:=2 to n do
+  begin
+    p:=p*i;
+  
+  int := 1;
+end.

@@ -1,0 +1,10 @@
+{
+program HelloWorld;
+var
+    _int, lazy_town_ : integer;
+    __r : real;
+Begin
+
+  int := 101;
+END.
+}

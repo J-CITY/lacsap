@@ -1,0 +1,14 @@
+{$ qwer}
+program HelloWorld;{
+ $QWER
+}
+{
+   $ QWERTY
+
+}
+var
+    _int, lazy_town_ : integer;
+    __r : real;
+Begin
+  int := 1;
+END.

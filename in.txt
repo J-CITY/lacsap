@@ -1,0 +1,20 @@
+program main; { pro{g}am }
+var   sum, r: real;
+      f, per_1, x_1,i:integer;
+      a : arrey [1..5] of char;
+begin
+  {sum:=(-x_1+2.5)*4 - (x_1-6)*((((x_1+2))));}
+  a[2] := 'a';
+  r := 3.1415;
+  x_1:= 18;  
+  f:= 456;
+  for i:=10 downto per_1-f+i*(x_1+1) do
+  begin
+    per_1 := per_1 + x_1*sum*f;
+     x_1:=-x_1-1;
+     f:=(f+1)*(x_1-24700);
+     sum:=(x_1+2.5)*4 - (x_1-6)*(x_1+2);
+  end;
+   writeln('summa ''='' ', sum);
+  {@@@@}
+end.

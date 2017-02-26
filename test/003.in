@@ -1,0 +1,11 @@
+program HelloWorld;
+var mas : array [1..10] of char;
+    int : integer;
+    r : real
+begin
+    int := 222222222;
+    mas[2] := 'a';
+    r := 3.1415;
+    writeln('111111', mas[2]);
+    writeln('');
+end.

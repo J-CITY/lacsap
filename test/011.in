@@ -1,0 +1,12 @@
+
+program HelloWorld;
+var
+    _int, lazy_town_ : integer;
+    __r : real;
+Begin
+  for i:=2 to n do
+  begin
+    p:=p*i;
+  end;
+  int := 1;
+END.
