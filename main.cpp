@@ -34,7 +34,7 @@ int main(int argc, char* argv[])
     scanner.read();
 
     if(key == "-l" || key == "-lexer") {
-        scanner.printLexems2();
+        scanner.printLexems();
     } else if(key == "-t" || key == "-test") {
         scanner.test();
     }

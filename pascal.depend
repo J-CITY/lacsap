@@ -19,3 +19,20 @@
 1488023325 source:c:\users\333da\desktop\fefu\djonson\pascal\scanner.cpp
 	"scanner.h"
 
+1488194855 source:c:\users\333da\desktop\fefu\djonson\lacsap\main.cpp
+	<iostream>
+	"scanner.h"
+	<direct.h>
+	<string>
+
+1488194297 c:\users\333da\desktop\fefu\djonson\lacsap\scanner.h
+	<map>
+	<string>
+	<fstream>
+	<iostream>
+	<set>
+	<vector>
+	<stdlib.h>
+	<sstream>
+	<iomanip>
+

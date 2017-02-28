@@ -11,7 +11,7 @@ var
     __r : real;
 Begin
 
-  int := 1;
+  _int := 1;
 END.
 {$
 q

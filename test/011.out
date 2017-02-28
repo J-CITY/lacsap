@@ -29,9 +29,9 @@ i 8 9 identifier 4006
 ; 8 10 separator 4
 end 9 2 keyword 315
 ; 9 5 separator 4
-int 10 2 identifier 4009
-:= 10 6 operation 23
-1 10 9 literalInt 7001
-; 10 10 separator 4
+_int 10 2 identifier 4001
+:= 10 7 operation 23
+1 10 10 literalInt 7001
+; 10 11 separator 4
 END 11 0 keyword 315
 . 11 3 separator 6

@@ -99,6 +99,7 @@
 #define ERROR_FORGOT_PAR        -1005
 #define ERROR_FORGOT_BASKETPAR  -1006
 #define ERROR_FORGOT_END_OR_BEGIN  -1007
+#define ERROR_FORGOT_TILDA  -1008
 
 struct TextPos {
 public:
@@ -132,69 +133,6 @@ struct Lexem {
 //#define val -1
 class Scanner {
 public:
-    /*const static char STAT [5][9] = {
-        //  *  /   =   ,   ;   :   .   (   )   [   ]   <   >   <>  <=  >=  +   -   :=  .. ide  con case else file goto then type until with do   if   of  or  in  to  end var div  and  not  for  mod  nil  set  begin while array const  lable  until downto packed record repeat program function procedure
-          {err,err,err,err,err,err,err,err,val,err,val,err,err,err,err,err,err,err,err,err,val,val,err, err, err, err, err, err, err,  err, err, err, err,err,err,err,err,err,err, err, err, err, err, err, err, err,  err,  err,  err,   err,   err,  err,   err,   err,   err,   err,    err,     err},//  *
-          {err,err,err,err,err,err,err,err,val,err,val,err,err,err,err,err,err,err,err,err,val,val,err, err, err, err, err, err, err,  err, err, err, err,err,err,err,err,err,err, err, err, err, err, err, err, err,  err,  err,  err,   err,   err,  err,   err,   err,   err,   err,    err,     err},//  /
-          {err,err,err,err,err,err,err,err,val,err,val,err,err,err,err,err,err,err,err,err,val,val,err, err, err, err, err, err, err,  err, err, err, err,err,err,err,err,err,err, err, err, err, err, err, err, err,  err,  err,  err,   err,   err,  err,   err,   err,   err,   err,    err,     err},//  =
-          {err,err,err,err,err,err,err,err,err,err,err,err,err,err,err,err,err,err,err,err,val,err,err, err, err, err, err, err, err,  err, err, err, err,err,err,err,err,err,err, err, err, err, err, err, err, err,  err,  err,  err,   err,   err,  err,   err,   err,   err,   err,    err,     err},//  ,
-          {err,err,err,err,err,err,err,err,val,err,val,err,err,err,err,err,err,err,err,err,val,val,err, err, err, err, err, err, err,  err, err, err, err,err,err,err,val,err,err, err, err, err, err, err, err, err,  err,  err,  err,   err,   err,  err,   err,   err,   err,   err,    err,     err},//  ;
-          {err,err,err,err,err,err,err,err,err,err,err,err,err,err,err,err,err,err,err,err,val,val,err, err, err, err, err, err, err,  err, err, err, err,err,err,err,err,err,err, err, err, err, err, err, err, err,  err,  err,  err,   err,   err,  err,   err,   err,   err,   err,    err,     err},//  :
-          {err,err,err,err,err,err,err,err,err,err,err,err,err,err,err,err,err,err,err,err,err,err,err, err, err, err, err, err, err,  err, err, err, err,err,err,err,val,err,err, err, err, err, err, err, err, err,  err,  err,  err,   err,   err,  err,   err,   err,   err,   err,    err,     err},//  .
-        //  (
-        //  )
-        //  [
-        //  ]
-        //  <
-        //  >
-        //  <>
-        //  <=
-        //  >=
-        //  +
-        //  -
-        //  :=
-        //  ..
-        //  ident
-        //  const
-        //  space
-        //  case
-        //  else
-        //  file
-        //  goto
-        //  then
-        //  type
-        //  until
-        //  with
-        //  do
-        //  if
-        //  of
-        //  or
-        //  in
-        //  to
-          {err,err,err,err,err,err,err,err,val,err,val,err,err,err,err,err,err,err,err,err,val,val,err, err, err, err, err, err, err,  err, err, err, err,err,err,err,err,err,err, err, err, err, err, err, err, err,  err,  err,  err,   err,   err,  err,   err,   err,   err,   err,    err,     err},//  end
-        //  var
-          {err,err,err,err,err,err,err,err,val,err,val,err,err,err,err,err,err,err,err,err,val,val,err, err, err, err, err, err, err,  err, err, err, err,err,err,err,err,err,err, err, err, err, err, err, err, err,  err,  err,  err,   err,   err,  err,   err,   err,   err,   err,    err,     err},//  div
-          {err,err,err,err,err,err,err,err,val,err,val,err,err,err,err,err,err,err,err,err,val,val,err, err, err, err, err, err, err,  err, err, err, err,err,err,err,err,err,err, err, err, err, err, err, err, err,  err,  err,  err,   err,   err,  err,   err,   err,   err,   err,    err,     err},//  and
-          {err,err,err,err,err,err,err,err,val,err,val,err,err,err,err,err,err,err,err,err,val,val,err, err, err, err, err, err, err,  err, err, err, err,err,err,err,err,err,err, err, err, err, err, err, err, err,  err,  err,  err,   err,   err,  err,   err,   err,   err,   err,    err,     err},//  not
-        //  for
-          {err,err,err,err,err,err,err,err,val,err,val,err,err,err,err,err,err,err,err,err,val,val,err, err, err, err, err, err, err,  err, err, err, err,err,err,err,err,err,err, err, err, err, err, err, err, err,  err,  err,  err,   err,   err,  err,   err,   err,   err,   err,    err,     err},//  mod
-        //  nil
-        //  set
-        //  begin
-        //  while
-        //  *  /   =   ,   ;   :   .   (   )   [   ]   <   >   <>  <=  >=  +   -   :=  .. ide  con case else file goto then type until with do   if   of  or  in  to  end var div  and  not  for  mod  nil  set  begin while array const  lable  until downto packed record repeat program function procedure
-          {err,err,err,err,err,val,err,err,err,err,err,err,err,err,err,err,err,err,err,err,err,err,err, err, err, err, err, err, err,  err, err, err, err,err,err,err,err,err,err, err, err, err, err, err, err, err,  err,  err,  err,   err,   err,  err,   err,   err,   err,   err,    err,     err},//  array
-        //  const
-        //  lable
-        //  until
-        //  downto
-        //  packed
-        //  record
-        //  repeat
-        //  program
-        //  function
-        //  procedure
-    };*/
     bool EOFbool = false;
 
     std::map <std::string, int> cods = {

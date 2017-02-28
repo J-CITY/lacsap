@@ -185,8 +185,8 @@ void Scanner::error(int err) {
     errorStr += "ERROR: ";
     switch(err) {
     case ERROR_BAD_SYMBOL: {
-        std::cout << "ERROR: " << ERROR_BAD_SYMBOL << " " << _pos.row << " " << _pos.col << std::endl;
-        std::cout << "ERROR: bad symbol" << std::endl;
+        //std::cout << "ERROR: " << ERROR_BAD_SYMBOL << " " << _pos.row << " " << _pos.col << std::endl;
+        //std::cout << "ERROR: bad symbol" << std::endl;
         ss.clear();
         ss << ERROR_BAD_SYMBOL;
         ss >> a;
@@ -194,8 +194,8 @@ void Scanner::error(int err) {
         break;
     }
     case ERROR_BIG_INT_CONST: {
-        std::cout << "ERROR: " << ERROR_BIG_INT_CONST << " " << _pos.row << " " << _pos.col << std::endl;
-        std::cout << "ERROR: big integer constant" << std::endl;
+        //std::cout << "ERROR: " << ERROR_BIG_INT_CONST << " " << _pos.row << " " << _pos.col << std::endl;
+        //std::cout << "ERROR: big integer constant" << std::endl;
         ss.clear();
         ss << ERROR_BIG_INT_CONST;
         ss >> a;
@@ -203,8 +203,8 @@ void Scanner::error(int err) {
         break;
     }
     case ERROR_CHAR_CONST: {
-        std::cout << "ERROR: " << ERROR_CHAR_CONST << " " << _pos.row << " " << _pos.col << std::endl;
-        std::cout << "ERROR: in char constant" << std::endl;
+        //std::cout << "ERROR: " << ERROR_CHAR_CONST << " " << _pos.row << " " << _pos.col << std::endl;
+        //std::cout << "ERROR: in char constant" << std::endl;
         ss.clear();
         ss << ERROR_CHAR_CONST;
         ss >> a;
@@ -212,8 +212,8 @@ void Scanner::error(int err) {
         break;
     }
     case ERROR_IT_IS_NOT_NUMBER: {
-        std::cout << "ERROR: " << ERROR_IT_IS_NOT_NUMBER << " " << _pos.row << " " << _pos.col << std::endl;
-        std::cout << "ERROR: it is not number" << std::endl;
+        //std::cout << "ERROR: " << ERROR_IT_IS_NOT_NUMBER << " " << _pos.row << " " << _pos.col << std::endl;
+        //std::cout << "ERROR: it is not number" << std::endl;
         ss.clear();
         ss << ERROR_IT_IS_NOT_NUMBER;
         ss >> a;
@@ -221,8 +221,8 @@ void Scanner::error(int err) {
         break;
     }
     case ERROR_FORGOT_PAR: {
-        std::cout << "ERROR: " << ERROR_FORGOT_PAR << " " << _pos.row << " " << _pos.col << std::endl;
-        std::cout << "ERROR: forgot ()" << std::endl;
+        //std::cout << "ERROR: " << ERROR_FORGOT_PAR << " " << _pos.row << " " << _pos.col << std::endl;
+        //std::cout << "ERROR: forgot ()" << std::endl;
         ss.clear();
         ss << ERROR_FORGOT_PAR;
         ss >> a;
@@ -230,8 +230,8 @@ void Scanner::error(int err) {
         break;
     }
     case ERROR_FORGOT_BASKETPAR: {
-        std::cout << "ERROR: " << ERROR_FORGOT_BASKETPAR << " " << _pos.row << " " << _pos.col << std::endl;
-        std::cout << "ERROR: forgot []" << std::endl;
+        //std::cout << "ERROR: " << ERROR_FORGOT_BASKETPAR << " " << _pos.row << " " << _pos.col << std::endl;
+        //std::cout << "ERROR: forgot []" << std::endl;
         ss.clear();
         ss << ERROR_FORGOT_BASKETPAR;
         ss >> a;
@@ -239,10 +239,19 @@ void Scanner::error(int err) {
         break;
     }
     case ERROR_FORGOT_END_OR_BEGIN: {
-        std::cout << "ERROR: " << ERROR_FORGOT_END_OR_BEGIN << " " << _pos.row << " " << _pos.col << std::endl;
-        std::cout << "ERROR: forgot end or begin" << std::endl;
+        //std::cout << "ERROR: " << ERROR_FORGOT_END_OR_BEGIN << " " << _pos.row << " " << _pos.col << std::endl;
+        //std::cout << "ERROR: forgot end or begin" << std::endl;
         ss.clear();
         ss << ERROR_FORGOT_END_OR_BEGIN;
+        ss >> a;
+        errorStr += a;
+        break;
+    }
+    case ERROR_FORGOT_TILDA: {
+        //std::cout << "ERROR: " << ERROR_FORGOT_TILDA << " " << _pos.row << " " << _pos.col << std::endl;
+        //std::cout << "ERROR: forgot tilda" << std::endl;
+        ss.clear();
+        ss << ERROR_FORGOT_TILDA;
         ss >> a;
         errorStr += a;
         break;
@@ -456,6 +465,7 @@ void Scanner::nextLexem() {
                 name += ch;
             }
             if(EOFbool) {
+                error(ERROR_FORGOT_TILDA);
                 break;
             }
         }
@@ -519,23 +529,6 @@ void Scanner::printLexems() {
         std::cout << lexems[i].val <<  std::endl;
     }
 }
-void Scanner::printLexems2() {
-    std::cout << "\n\n";
-    for(unsigned int i = 0; i < lexems.size(); ++i) {
-        std::string s = getSymbolType(lexems[i].type);
-        //std::cout.width(20);
-        std::cout << lexems[i].lexem << " ";
-        //std::cout.width(3);
-        std::cout << lexems[i].pos.row << " ";
-        //std::cout.width(3);
-        std::cout << lexems[i].pos.col << " ";
-        //std::cout.width(15);
-        std::cout  << s << " ";
-        //std::cout.width(5);
-        std::cout << lexems[i].val <<  std::endl;
-    }
-}
-
 
 void Scanner::test() {
     std::ifstream test;

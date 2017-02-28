@@ -16,9 +16,9 @@ __r 10 4 identifier 4004
 real 10 10 identifier 4005
 ; 10 14 separator 4
 Begin 11 0 keyword 324
-int 12 2 identifier 4006
-:= 12 6 operation 23
-1 12 9 literalInt 7000
-; 12 10 separator 4
+_int 12 2 identifier 4001
+:= 12 7 operation 23
+1 12 10 literalInt 7000
+; 12 11 separator 4
 END 13 0 keyword 315
 . 13 3 separator 6
