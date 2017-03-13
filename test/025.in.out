@@ -1,0 +1,10 @@
+a   0   0      identifier    24
+:=   0   2       operation    22
+2   0   5      literalInt    26
++   0   7       operation    20
+i   0   9      identifier    24
+*   0  11       operation     1
+i   0  13      identifier    24
+/   0  15       operation     2
+i   0  17      identifier    24
+;   0  18       separator     5

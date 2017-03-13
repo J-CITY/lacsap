@@ -1,5 +1,8 @@
 #include "scanner.h"
 
+const int LETER  = 101;
+const int NUMBER = 102;
+
 Scanner::Scanner(std::string _filePath) {
     filePath = _filePath;
     in.open(_filePath);
@@ -9,43 +12,127 @@ Scanner::Scanner(std::string _filePath) {
         exit(-2);
     }
 
-    keyWords.insert("if");
-    keyWords.insert("do");
-    keyWords.insert("of");
-    keyWords.insert("or");
-    keyWords.insert("in");
-    keyWords.insert("to");
-    keyWords.insert("end");
-    keyWords.insert("var");
-    keyWords.insert("div");
+    cods = {
+      { "#", sharp          },
+      { "*", star           },
+      { "/", slash          },
+      { "=", equal          },
+      { ",", comma          },
+      { ";", semicolon      },
+      { ":", colon          },
+      { ".", point          },
+      { "^", arrow          },
+      { "(", lpar           },
+      { ")", rpar           },
+      { "[", lbracket       },
+      { "]", rbracket       },
+      { "{", flpar          },
+      { "}", frpar          },
+      { "<", later          },
+      { ">", greater        },
+      { "<=", laterequal    },
+      { ">=", greaterequal  },
+      { "<>", latergreater  },
+      {  "+", plus          },
+      {  "-", minus         },
+      { ":=", assign        },
+      { "..", twopoints     },
+      { "ident", ident        },
+      { "float", floatc       },
+      { "int", intc         },
+      { "char", charc        },
+      { "and", sys_and      },
+      { "array", sys_array    },
+      { "begin", sys_begin    },
+      { "break", sys_break    },
+      { "case", sys_case     },
+      { "const", sys_const    },
+      { "continue", sys_continue },
+      { "div", sys_div      },
+      { "do", sys_do       },
+      { "downto", sys_downto   },
+      { "else", sys_else     },
+      { "end", sys_end      },
+      { "false", sys_false    },
+      { "file", sys_file     },
+      { "for", sys_for      },
+      { "function", sys_function },
+      { "goto", sys_goto     },
+      { "if", sys_if       },
+      { "lable", sys_lable    },
+      { "mod", sys_mod      },
+      { "nil", sys_nil      },
+      { "not", sys_not      },
+      { "of", sys_of       },
+      { "or", sys_or       },
+      { "packed", sys_packed   },
+      { "procedure", sys_procedure},
+      { "program", sys_program  },
+      { "record", sys_record   },
+      { "repeat", sys_repeat   },
+      { "set", sys_set      },
+      { "shl", sys_shl      },
+      { "shr", sys_shr      },
+      { "string", sys_string   },
+      { "then", sys_then     },
+      { "to", sys_to       },
+      { "true", sys_true     },
+      { "type", sys_type     },
+      { "unit", sys_unit     },
+      { "until", sys_until    },
+      { "var", sys_var      },
+      { "while", sys_while    },
+      { "with", sys_with     },
+      { "xor", sys_xor      }
+    };
+
     keyWords.insert("and");
+    keyWords.insert("array");
+    keyWords.insert("begin");
+    keyWords.insert("break");
+    keyWords.insert("case");
+    keyWords.insert("const");
+    keyWords.insert("continue");
+    keyWords.insert("div");
+    keyWords.insert("do");
+    keyWords.insert("downto");
+    keyWords.insert("else");
+    keyWords.insert("end");
+    keyWords.insert("false");
+    keyWords.insert("file");
     keyWords.insert("for");
+    keyWords.insert("function");
+    keyWords.insert("goto");
+    keyWords.insert("if");
+    keyWords.insert("lable");
     keyWords.insert("mod");
     keyWords.insert("nil");
-    keyWords.insert("set");
-    keyWords.insert("then");
-    keyWords.insert("else");
-    keyWords.insert("case");
-    keyWords.insert("file");
-    keyWords.insert("goto");
-    keyWords.insert("type");
-    keyWords.insert("with");
-    keyWords.insert("begin");
-    keyWords.insert("while");
-    keyWords.insert("array");
-    keyWords.insert("const");
-    keyWords.insert("label");
-    keyWords.insert("until");
-    keyWords.insert("downto");
+    keyWords.insert("not");
+    keyWords.insert("of");
+    keyWords.insert("or");
     keyWords.insert("packed");
+    keyWords.insert("procedure");
+    keyWords.insert("program");
     keyWords.insert("record");
     keyWords.insert("repeat");
-    keyWords.insert("program");
-    keyWords.insert("function");
-    keyWords.insert("procedure");
+    keyWords.insert("set");
+    keyWords.insert("shl");
+    keyWords.insert("shr");
+    keyWords.insert("string");
+    keyWords.insert("then");
+    keyWords.insert("to");
+    keyWords.insert("true");
+    keyWords.insert("type");
+    keyWords.insert("unit");
+    keyWords.insert("until");
+    keyWords.insert("var");
+    keyWords.insert("while");
+    keyWords.insert("with");
+    keyWords.insert("xor");
+
 }
 
-std::string Scanner::getSymbolType(int type) {
+std::string Scanner::getSymbolTypeStr(int type) {
     switch(type) {
     case identifier:
         return "identifier";
@@ -68,30 +155,7 @@ std::string Scanner::getSymbolType(int type) {
     }
 }
 
-unsigned char Scanner::nextChar() {
-    textPos.col++;
-    if((unsigned int)textPos.col >= str.size()) {
-        //std::getline(in, str);
-        if(!std::getline(in, str)) {
-            EOFbool = true;
-        }
-        textPos.col = 0;
-        textPos.row++;
-    }
-    return str[textPos.col];
-}
-
-void Scanner::readSpace(unsigned char ch) {
-    if(ch != ' ' && ch != '\n' && ch != 0 && ch != '\t') {
-        return;
-    }
-    ch = nextChar();
-    while(ch == ' ' || ch == '\n' || ch == 0 || ch == '\t') {
-        ch = nextChar();
-    }
-}
-
-unsigned char Scanner::getType(unsigned char type) {
+unsigned char Scanner::getSymbolType(unsigned char type) {
     if(
         (type >= 'A' && type <= 'Z') ||
         (type >= 'a' && type <= 'z') || type == '_'
@@ -104,9 +168,45 @@ unsigned char Scanner::getType(unsigned char type) {
     return type;
 }
 
-void Scanner::readWord(unsigned char ch) {
+unsigned char Scanner::nextChar() {
+    textPos.col++;
+    if((unsigned int)textPos.col >= str.size()) {
+        if(!std::getline(in, str)) {
+            EOFbool = true;
+        }
+        str += '\n';
+        textPos.col = 0;
+        textPos.row++;
+    }
+    return str[textPos.col];
+}
+
+unsigned char Scanner::nextLine() {
+    if(!std::getline(in, str)) {
+        EOFbool = true;
+    }
+    str += '\n';
+    textPos.col = 0;
+    textPos.row++;
+    return str[textPos.col];
+}
+
+void Scanner::readSpace(unsigned char ch) {
+    if(ch != ' ' && ch != '\n' && ch != 0 && ch != '\t') {
+        return;
+    }
+    ch = nextChar();
+    while(ch == ' ' || ch == '\n' || ch == 0 || ch == '\t') {
+        ch = nextChar();
+        if(EOFbool) {
+            return;
+        }
+    }
+}
+
+void Scanner::readIdentifier(unsigned char ch) {
     int len;
-    while( (getType(ch) == LETER || getType(ch) == NUMBER) || ch == '_' ) {
+    while( (getSymbolType(ch) == LETER || getSymbolType(ch) == NUMBER) || ch == '_' ) {
         name += ch;
         len++;
         ch = nextChar();
@@ -118,33 +218,16 @@ void Scanner::readWord(unsigned char ch) {
     if(keyWords.find(_name) != keyWords.end()) {
         symbol = cods[_name];
         symbolType = keyword;
-        if(_name == "begin") {
-            beginEndCount++;
-        } else if(_name == "end") {
-            beginEndCount--;
-        }
     } else {
-        symbol = cods["ident"] + identifiers;
+        symbol = cods["ident"];
         symbolType = identifier;
-        identifiers++;
-        for(unsigned int i = 0; i < lexems.size(); ++i) {
-            if(lexems[i].type == identifier) {
-                if(lexems[i].lexem == name) {
-                    identifiers--;
-                    symbol = lexems[i].val;
-                    break;
-                }
-            }
-        }
-
-
     }
 
 }
 
 void Scanner::readNumber(unsigned char ch) {
     int len;
-    while ( getType(ch) == NUMBER || ch == '.' ) {
+    while ( getSymbolType(ch) == NUMBER || ch == '.' || ch == '+' || ch == '-' || ch == 'e' || ch == 'E') {
         if(ch == '.') {
             if(str.size() > (unsigned int)textPos.col+1 && str[textPos.col+1] == '.') {
                 break;
@@ -154,23 +237,21 @@ void Scanner::readNumber(unsigned char ch) {
         len++;
         ch = nextChar();
     }
-    int _int = atoi(name.c_str());
-    std::string _str = static_cast<std::ostringstream*>( &(std::ostringstream() << _int) )->str();
-    if(name == _str) {
+    std::string::size_type sz;
+    int _int = std::stoi(name, &sz);
+    if(sz == name.size()) {
         if(abs(_int) > 32767) {
             error(ERROR_BIG_INT_CONST);
         }
-        symbol = cods["int"] + literalsInt;
+        symbol = cods["int"];
         symbolType = literalint;
-        literalsInt++;
         return;
     }
-    float _float = atof(name.c_str());
-    _str = static_cast<std::ostringstream*>( &(std::ostringstream() << _float) )->str();
-    if(name == _str) {
-        symbol = cods["float"] + literalsFloat;
+
+    double _real = std::stod(name, &sz);
+    if(sz == name.size()) {
+        symbol = cods["float"];
         symbolType = literalfloat;
-        literalsFloat++;
         return;
     }
     error(ERROR_IT_IS_NOT_NUMBER);
@@ -179,93 +260,35 @@ void Scanner::readNumber(unsigned char ch) {
 
 void Scanner::error(int err) {
     ERRORbool = true;
-    std::stringstream ss;
-    std::string a;
-
     errorStr += "ERROR: ";
     switch(err) {
     case ERROR_BAD_SYMBOL: {
-        //std::cout << "ERROR: " << ERROR_BAD_SYMBOL << " " << _pos.row << " " << _pos.col << std::endl;
-        //std::cout << "ERROR: bad symbol" << std::endl;
-        ss.clear();
-        ss << ERROR_BAD_SYMBOL;
-        ss >> a;
-        errorStr += a;
+        errorStr += "ERROR BAD SYMBOL (";
         break;
     }
     case ERROR_BIG_INT_CONST: {
-        //std::cout << "ERROR: " << ERROR_BIG_INT_CONST << " " << _pos.row << " " << _pos.col << std::endl;
-        //std::cout << "ERROR: big integer constant" << std::endl;
-        ss.clear();
-        ss << ERROR_BIG_INT_CONST;
-        ss >> a;
-        errorStr += a;
-        break;
-    }
-    case ERROR_CHAR_CONST: {
-        //std::cout << "ERROR: " << ERROR_CHAR_CONST << " " << _pos.row << " " << _pos.col << std::endl;
-        //std::cout << "ERROR: in char constant" << std::endl;
-        ss.clear();
-        ss << ERROR_CHAR_CONST;
-        ss >> a;
-        errorStr += a;
+        errorStr += "ERROR BIG INTEGER CONST (";
         break;
     }
     case ERROR_IT_IS_NOT_NUMBER: {
-        //std::cout << "ERROR: " << ERROR_IT_IS_NOT_NUMBER << " " << _pos.row << " " << _pos.col << std::endl;
-        //std::cout << "ERROR: it is not number" << std::endl;
-        ss.clear();
-        ss << ERROR_IT_IS_NOT_NUMBER;
-        ss >> a;
-        errorStr += a;
-        break;
-    }
-    case ERROR_FORGOT_PAR: {
-        //std::cout << "ERROR: " << ERROR_FORGOT_PAR << " " << _pos.row << " " << _pos.col << std::endl;
-        //std::cout << "ERROR: forgot ()" << std::endl;
-        ss.clear();
-        ss << ERROR_FORGOT_PAR;
-        ss >> a;
-        errorStr += a;
-        break;
-    }
-    case ERROR_FORGOT_BASKETPAR: {
-        //std::cout << "ERROR: " << ERROR_FORGOT_BASKETPAR << " " << _pos.row << " " << _pos.col << std::endl;
-        //std::cout << "ERROR: forgot []" << std::endl;
-        ss.clear();
-        ss << ERROR_FORGOT_BASKETPAR;
-        ss >> a;
-        errorStr += a;
-        break;
-    }
-    case ERROR_FORGOT_END_OR_BEGIN: {
-        //std::cout << "ERROR: " << ERROR_FORGOT_END_OR_BEGIN << " " << _pos.row << " " << _pos.col << std::endl;
-        //std::cout << "ERROR: forgot end or begin" << std::endl;
-        ss.clear();
-        ss << ERROR_FORGOT_END_OR_BEGIN;
-        ss >> a;
-        errorStr += a;
+        errorStr += "ERROR IT IS NOT NUMBER (";
         break;
     }
     case ERROR_FORGOT_TILDA: {
-        //std::cout << "ERROR: " << ERROR_FORGOT_TILDA << " " << _pos.row << " " << _pos.col << std::endl;
-        //std::cout << "ERROR: forgot tilda" << std::endl;
-        ss.clear();
-        ss << ERROR_FORGOT_TILDA;
-        ss >> a;
-        errorStr += a;
+        errorStr += "ERROR FORGOT TILDA (";
+        break;
+    }
+    case ERROR_BIG_CHAR_CONST: {
+        errorStr += "ERROR BIG CHAR CONST (";
+        break;
+    }
+    case ERROR_FORGOT_FPAR: {
+        errorStr += "ERROR FORGOT FPAR (";
         break;
     }
     }
-    errorStr += " ";
-    ss.clear();
-    ss << _pos.row;
-    ss >> a;
-    errorStr += a + " ";
-    ss.clear();
-    ss << _pos.col;
-    ss >> a;
-    errorStr += a;
+    errorStr = errorStr + std::to_string(err) + ")"
+    + " row: " + std::to_string(_pos.row) + " col: " + std::to_string(_pos.row) + '\n';
 
     //exit(err);
 }
@@ -273,26 +296,34 @@ void Scanner::error(int err) {
 void Scanner::nextLexem() {
     unsigned char ch = str[textPos.col];
     readSpace(ch);
+    if(EOFbool) {
+        return;
+    }
     ch = str[textPos.col];
-    unsigned char type = getType(ch);
+    unsigned char type = getSymbolType(ch);
     _pos.col = textPos.col;
     _pos.row = textPos.row;
     name = "";
     switch(type) {
     case LETER:
-        readWord(ch);
+        readIdentifier(ch);
     break;
     case '_':
-        readWord(ch);
+        readIdentifier(ch);
     break;
     case NUMBER:
         readNumber(ch);
     break;
     case '/':
-        name += ch;
-        symbol = cods[name];
-        symbolType = operation;
-        nextChar();
+        ch = nextChar();
+        if(ch != '/') {
+            name += '/';
+            symbol = cods[name];
+            symbolType = operation;
+        } else {
+            symbolType = -1;
+            nextLine();
+        }
     break;
     case '*':
         name += ch;
@@ -357,28 +388,24 @@ void Scanner::nextLexem() {
         symbolType = separator;
     break;
     case '(':
-        parCount++;
         name += ch;
         symbol = cods[name];
         symbolType = separator;
         nextChar();
     break;
     case ')':
-        parCount--;
         name += ch;
         symbol = cods[name];
         symbolType = separator;
         nextChar();
     break;
     case '[':
-        bascketCount++;
         name += ch;
         symbol = cods[name];
         symbolType = separator;
         nextChar();
     break;
     case ']':
-        bascketCount--;
         name += ch;
         symbol = cods[name];
         symbolType = separator;
@@ -392,12 +419,15 @@ void Scanner::nextLexem() {
         if(ch == '$') {
             symbol = directive;
             symbolType = directive;
-            name = "{$";
+            name = "{";
         } else {
             symbolType = -1;
         }
         while(fparCount != 0) {
-            ch = nextChar();
+            if(EOFbool) {
+                error(ERROR_FORGOT_FPAR);
+                break;
+            }
             if(ch == '}') {
                 fparCount--;
             }
@@ -410,9 +440,7 @@ void Scanner::nextLexem() {
             if(symbol == directive) {
                 name += ch;
             }
-            if(EOFbool) {
-                break;
-            }
+            ch = nextChar();
         }
         nextChar();
     break;
@@ -453,6 +481,10 @@ void Scanner::nextLexem() {
         bool b = true;
         while(b) {
             ch = nextChar();
+            if(ch == '\n') {
+                error(ERROR_FORGOT_TILDA);
+                b = false;
+            }
             if(ch == '\'') {
                 ch = nextChar();
                 if(ch == '\'') {
@@ -469,12 +501,38 @@ void Scanner::nextLexem() {
                 break;
             }
         }
-        symbol = cods["char"] + literalsChar;
+        symbol = cods["char"];
         symbolType = literalchar;
-        literalsChar++;
-        if(lexems[lexems.size()-1].val == assign && (name == "''" || name.size() > 3)) {
-            error(ERROR_CHAR_CONST);
+        break;
+    }
+    case '\\':
+        ch = nextChar();
+        if(ch != '\\') {
+            error(ERROR_BAD_SYMBOL);
         }
+        symbolType = -1;
+        nextLine();
+        break;
+    case '#':
+    {
+        ch = nextChar();
+        if(getSymbolType(ch) != NUMBER) {
+            error(ERROR_BAD_SYMBOL);
+            break;
+        }
+        while ( getSymbolType(ch) == NUMBER) {
+            name += ch;
+            ch = nextChar();
+        }
+        int _int = atoi(name.c_str());
+
+        if(_int > 255) {
+            error(ERROR_BIG_CHAR_CONST);
+        }
+        symbol = cods["char"];
+        symbolType = literalchar;
+        name = (unsigned char)_int;
+
         break;
     }
     default:
@@ -483,7 +541,7 @@ void Scanner::nextLexem() {
     }
     }
     if(symbolType != -1) {
-        /*
+/*
         std::string s = getSymbolType(symbolType);
         std::cout.width(20);
         std::cout << name << " ";
@@ -495,16 +553,7 @@ void Scanner::nextLexem() {
         std::cout  << s << " ";
         std::cout.width(5);
         std::cout << symbol <<  std::endl;
-        */
-
-        if(symbol == semicolon) {
-            if(parCount != 0) {
-                error(ERROR_FORGOT_PAR);
-            }
-            if(bascketCount != 0) {
-                error(ERROR_FORGOT_BASKETPAR);
-            }
-        }
+*/
 
         Lexem l(name, _pos, symbol, symbolType);
         lexems.push_back(l);
@@ -516,7 +565,7 @@ void Scanner::printLexems() {
         return;
     }
     for(unsigned int i = 0; i < lexems.size(); ++i) {
-        std::string s = getSymbolType(lexems[i].type);
+        std::string s = getSymbolTypeStr(lexems[i].type);
         std::cout.width(20);
         std::cout << lexems[i].lexem << " ";
         std::cout.width(3);
@@ -531,78 +580,29 @@ void Scanner::printLexems() {
 }
 
 void Scanner::test() {
-    std::ifstream test;
-    std::string testPath = filePath;
-    std::string teststr, teststrin;
-    testPath.resize(testPath.size() - 2);
-    testPath += "out";
-
-    test.open(testPath);
-    if(!test.is_open()) {
-        test.close();
-        std::cout << "Can not open file!\n";
-        exit(-2);
-    }
     if(errorStr != "") {
-        std::getline(test, teststrin);
-        //std::cout << teststrin << std::endl << errorStr << std::endl;
-        if(teststrin == errorStr) {
-            std::cout << "OK\n";
-        } else {
-            std::cout << "ERROR\n";
-        }
+        std::cout << errorStr << std::endl;
         return;
     }
-
-    bool testBool = true;
+    std::string teststr;
     for(unsigned int i = 0; i < lexems.size(); ++i) {
-        std::string s = getSymbolType(lexems[i].type);
-        std::stringstream ss;
-        std::string a;
+        teststr = lexems[i].lexem+" " + std::to_string(lexems[i].pos.row) + " "
+                            + std::to_string(lexems[i].pos.col) + " " + getSymbolTypeStr(lexems[i].type)
+                            +" "+ std::to_string(lexems[i].val) + "\n";
 
-        teststr = lexems[i].lexem+" ";
-        ss.clear();
-        ss << lexems[i].pos.row;
-        ss >> a;
-        teststr += a + " ";
-        ss.clear();
-        ss << lexems[i].pos.col;
-        ss >> a;
-        teststr += a + " ";
-        teststr += s + " ";
-        ss.clear();
-        ss << lexems[i].val;
-        ss >> a;
-        teststr += a;
-        std::getline(test, teststrin);
-        //std::cout << teststr <<":" << std::endl << teststrin <<":" << std::endl;
-        if(teststr != teststrin) {
-            testBool = false;
-            break;
-        }
+        std::cout << teststr;
     }
-    if(testBool) {
-        std::cout << "OK\n";
-    } else {
-        std::cout << "ERROR\n";
-    }
+
 }
 
 void Scanner::read() {
     std::getline(in, str);
+    str += '\n';
     while(!EOFbool && !ERRORbool) {
         nextLexem();
         //getchar();
     }
-    if(!ERRORbool) {
-        if(beginEndCount != 0) {
-            error(ERROR_FORGOT_END_OR_BEGIN);
-        } else if(bascketCount != 0) {
-            error(ERROR_FORGOT_BASKETPAR);
-        } else if(parCount != 0) {
-            error(ERROR_FORGOT_PAR);
-        }
-    }
+
 
 }
 

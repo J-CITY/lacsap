@@ -1,14 +1,16 @@
-C:\Users\333da\Desktop\FEFU\Djonson\lacsap\pascal.exe -t test/000.in
-C:\Users\333da\Desktop\FEFU\Djonson\lacsap\pascal.exe -t test/001.in
-C:\Users\333da\Desktop\FEFU\Djonson\lacsap\pascal.exe -t test/002.in
-C:\Users\333da\Desktop\FEFU\Djonson\lacsap\pascal.exe -t test/003.in
-C:\Users\333da\Desktop\FEFU\Djonson\lacsap\pascal.exe -t test/004.in
-C:\Users\333da\Desktop\FEFU\Djonson\lacsap\pascal.exe -t test/005.in
-C:\Users\333da\Desktop\FEFU\Djonson\lacsap\pascal.exe -t test/006.in
-C:\Users\333da\Desktop\FEFU\Djonson\lacsap\pascal.exe -t test/007.in
-C:\Users\333da\Desktop\FEFU\Djonson\lacsap\pascal.exe -t test/008.in
-C:\Users\333da\Desktop\FEFU\Djonson\lacsap\pascal.exe -t test/009.in
-C:\Users\333da\Desktop\FEFU\Djonson\lacsap\pascal.exe -t test/010.in
-C:\Users\333da\Desktop\FEFU\Djonson\lacsap\pascal.exe -t test/011.in
-C:\Users\333da\Desktop\FEFU\Djonson\lacsap\pascal.exe -t test/012.in
-C:\Users\333da\Desktop\FEFU\Djonson\lacsap\pascal.exe -t test/013.in
+echo off
+set /A COUNTER=0
+set /A TESTOK=0
+for /r %~dp0test %%i in (*.in) do (
+	echo %%i
+	%~dp0pascal.exe -t %%i > %~dp0test.test
+	fc /a /w %%i.out %~dp0test.test > nul
+	if errorlevel 1 (
+		echo [ERROR]
+	) else (
+		echo [OK]
+		set /A TESTOK=TESTOK+1
+	)
+	set /A COUNTER=COUNTER+1
+)
+echo OK TESTS: %TESTOK% / %COUNTER%

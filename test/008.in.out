@@ -1,0 +1,43 @@
+and   0   0         keyword    28
+array   1   0         keyword    29
+begin   2   0         keyword    30
+break   3   0         keyword    31
+case   4   0         keyword    32
+const   5   0         keyword    33
+continue   6   0         keyword    34
+div   7   0         keyword    35
+ do   8   0         keyword    36
+downto   9   0         keyword    37
+else  10   0         keyword    38
+end  11   0         keyword    39
+false  12   0         keyword    40
+file  13   0         keyword    41
+for  14   0         keyword    42
+function  15   0         keyword    43
+goto  16   0         keyword    44
+ if  17   0         keyword    45
+lable  18   0         keyword    46
+mod  19   0         keyword    47
+nil  20   0         keyword    48
+not  21   0         keyword    49
+ of  22   0         keyword    50
+ or  23   0         keyword    51
+packed  24   0         keyword    52
+procedure  25   0         keyword    53
+program  26   0         keyword    54
+record  27   0         keyword    55
+repeat  28   0         keyword    56
+set  29   0         keyword    57
+shl  30   0         keyword    58
+shr  31   0         keyword    59
+string  32   0         keyword    60
+then  33   0         keyword    61
+ to  34   0         keyword    62
+true  35   0         keyword    63
+type  36   0         keyword    64
+unit  37   0         keyword    65
+until  38   0         keyword    66
+var  39   0         keyword    67
+while  40   0         keyword    68
+with  41   0         keyword    69
+xor  42   0         keyword    70

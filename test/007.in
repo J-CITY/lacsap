@@ -1,8 +1,1 @@
-program HelloWorld;
-var mas : array [1..10] of char;
-    int : integer;
-    r : real;
-begin
-    int := 1+(2*3)-(((2-4)-1)-2);
-    mas[2] := (mas[1]*(1-mas[5]) - (mas[1]-mas[(1+3*2)]);
-end.
+End END end

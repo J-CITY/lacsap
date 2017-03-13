@@ -1,0 +1,5 @@
+Program HW;
+var i : integer;
+begin
+  i:=1;
+end;

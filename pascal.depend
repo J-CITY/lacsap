@@ -19,13 +19,13 @@
 1488023325 source:c:\users\333da\desktop\fefu\djonson\pascal\scanner.cpp
 	"scanner.h"
 
-1488194855 source:c:\users\333da\desktop\fefu\djonson\lacsap\main.cpp
+1488295510 source:c:\users\333da\desktop\fefu\djonson\lacsap\main.cpp
 	<iostream>
 	"scanner.h"
 	<direct.h>
 	<string>
 
-1488194297 c:\users\333da\desktop\fefu\djonson\lacsap\scanner.h
+1488333935 c:\users\333da\desktop\fefu\djonson\lacsap\scanner.h
 	<map>
 	<string>
 	<fstream>
@@ -35,4 +35,7 @@
 	<stdlib.h>
 	<sstream>
 	<iomanip>
+
+1488351709 source:c:\users\333da\desktop\fefu\djonson\lacsap\scanner.cpp
+	"scanner.h"
 

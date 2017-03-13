@@ -27,9 +27,9 @@ int main(int argc, char* argv[])
 
     string path = argv[0];
     path.resize(path.size() - 10);
-    cout << path + filename << endl;
+    //cout << path + filename << endl;
 
-    Scanner scanner(path + filename);
+    Scanner scanner(filename);
 
     scanner.read();
 

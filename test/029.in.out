@@ -1,0 +1,9 @@
+var   0   0         keyword    67
+  :   0   4       separator     6
+array   0   6         keyword    29
+  [   0  12       separator    11
+  1   0  13      literalInt    26
+ ..   0  14       separator    23
+ 10   0  16      literalInt    26
+  ]   0  18       separator    12
+  ;   0  19       separator     5

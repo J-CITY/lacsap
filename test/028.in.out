@@ -1,0 +1,15 @@
+Program   0   0         keyword    54
+     HW   0   8      identifier    24
+      ;   0  10       separator     5
+    var   1   0         keyword    67
+      i   1   4      identifier    24
+      :   1   6       separator     6
+integer   1   8      identifier    24
+      ;   1  15       separator     5
+  begin   2   0         keyword    30
+      i   3   2      identifier    24
+     :=   3   3       operation    22
+      1   3   5      literalInt    26
+      ;   3   6       separator     5
+    end   4   0         keyword    39
+      ;   4   3       separator     5
