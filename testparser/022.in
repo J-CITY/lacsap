@@ -1,0 +1,6 @@
+program main;
+var
+	c:char;
+begin
+	c:=chr(44);
+end.

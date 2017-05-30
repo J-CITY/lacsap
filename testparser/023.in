@@ -1,0 +1,6 @@
+program main;
+var
+      j, i:char;
+begin
+  j := j + 'a';
+end.

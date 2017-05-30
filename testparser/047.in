@@ -1,0 +1,6 @@
+program main;
+var
+	b,n:boolean;
+begin
+	b := not(n);
+end.

@@ -1,0 +1,6 @@
+program main;
+var
+	a,b:real;
+begin
+  a := a * 2 - b;
+end.

@@ -1,0 +1,9 @@
+program main;
+var
+	b:record
+		val:integer;
+		notval:char;
+	end;
+begin
+  b.notval := #455;
+end.

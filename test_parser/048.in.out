@@ -1,0 +1,24 @@
+integer  | types    | integer
+real     | types    | real
+char     | types    | char
+maxint   | consts   | integer
+false    | consts   | integer
+true     | consts   | integer
+boolean  | types    | boolean {true false}
+nil      | vars     | pointer nil 
+PROGRAM : main
+b        | vars     | integer
+n        | vars     | integer
+
+ÀÄÄÄÄBLOCK
+     ÀÄÄÄÄbegin
+               ÚÄÄÄÄb:identifier{integer}
+
+          ÀÄÄÄÄ:=:operation{integer}
+               ÀÄÄÄÄnot:keyword{integer}
+                    ÀÄÄÄÄn:identifier{integer}
+
+
+
+
+

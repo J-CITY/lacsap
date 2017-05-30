@@ -36,6 +36,128 @@
 	<sstream>
 	<iomanip>
 
-1488351709 source:c:\users\333da\desktop\fefu\djonson\lacsap\scanner.cpp
+1488333938 source:c:\users\333da\desktop\fefu\djonson\lacsap\scanner.cpp
 	"scanner.h"
+
+1491219889 source:c:\users\333da\desktop\fefu\djonson\lacsap1\scanner.cpp
+	"scanner.h"
+
+1491141386 c:\users\333da\desktop\fefu\djonson\lacsap1\scanner.h
+	<map>
+	<fstream>
+	<iostream>
+	<set>
+	<vector>
+	<cstdlib>
+	<sstream>
+	<iomanip>
+	"errors.h"
+
+1491222589 source:c:\users\333da\desktop\fefu\djonson\lacsap1\main.cpp
+	<iostream>
+	"parser.h"
+	"scanner.h"
+	<string>
+	<windows.h>
+
+1491222880 c:\users\333da\desktop\fefu\djonson\lacsap1\parser.h
+	<algorithm>
+	"scanner.h"
+
+1491221508 source:c:\users\333da\desktop\fefu\djonson\lacsap1\parser.cpp
+	"parser.h"
+
+1491218211 c:\users\333da\desktop\fefu\djonson\lacsap1\errors.h
+	<string>
+	<cstdlib>
+
+1491640563 source:c:\users\333da\desktop\lacsap1\main.cpp
+	<iostream>
+	"parser.h"
+	"scanner.h"
+	<string>
+	<windows.h>
+
+1491706565 c:\users\333da\desktop\lacsap1\parser.h
+	<algorithm>
+	"scanner.h"
+
+1491141388 c:\users\333da\desktop\lacsap1\scanner.h
+	<map>
+	<fstream>
+	<iostream>
+	<set>
+	<vector>
+	<cstdlib>
+	<sstream>
+	<iomanip>
+	"errors.h"
+
+1491704474 c:\users\333da\desktop\lacsap1\errors.h
+	<string>
+	<cstdlib>
+
+1491706374 source:c:\users\333da\desktop\lacsap1\parser.cpp
+	"parser.h"
+
+1491219890 source:c:\users\333da\desktop\lacsap1\scanner.cpp
+	"scanner.h"
+
+1491706090 c:\users\333da\desktop\lacsap1\descriptor.h
+
+1491705541 c:\users\333da\desktop\lacsap1\symbol.h
+	"descriptor.h"
+
+1491706082 c:\users\333da\desktop\lacsap1\node.h
+
+1495604984 source:c:\users\333da\desktop\lacsap\main.cpp
+	<iostream>
+	"parser.h"
+	"scanner.h"
+	<string>
+	<windows.h>
+
+1495948089 c:\users\333da\desktop\lacsap\parser.h
+	<algorithm>
+	"scanner.h"
+	"asmCmd.h"
+	<stack>
+
+1491141388 c:\users\333da\desktop\lacsap\scanner.h
+	<map>
+	<fstream>
+	<iostream>
+	<set>
+	<vector>
+	<cstdlib>
+	<sstream>
+	<iomanip>
+	"errors.h"
+
+1494294331 c:\users\333da\desktop\lacsap\errors.h
+	<string>
+	<cstdlib>
+
+1494300655 source:c:\users\333da\desktop\lacsap\scanner.cpp
+	"scanner.h"
+
+1495941882 source:c:\users\333da\desktop\lacsap\parser.cpp
+	"parser.h"
+
+1495597096 source:c:\users\333da\desktop\lacsap\parseblock.cpp
+	"parser.h"
+
+1495949954 source:c:\users\333da\desktop\lacsap\parseexpression.cpp
+	"parser.h"
+
+1491992279 source:c:\users\333da\desktop\lacsap\parserprint.cpp
+	"parser.h"
+
+1495601061 c:\users\333da\desktop\lacsap\asmcmd.h
+	<iostream>
+	<vector>
+	<map>
+
+1495602057 source:c:\users\333da\desktop\lacsap\asmcmd.cpp
+	"asmCmd.h"
 

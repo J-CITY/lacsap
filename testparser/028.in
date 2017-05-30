@@ -1,0 +1,10 @@
+program main;
+Var
+  i : integer;
+
+begin
+  while i <= 10 do
+  begin
+    break;
+  end;
+end.

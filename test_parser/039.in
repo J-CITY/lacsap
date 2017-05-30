@@ -1,0 +1,13 @@
+program main;
+
+function summ(arr : array of real; y: integer): integer;
+begin
+  result := 1 + y;
+end;
+
+var
+	x1, y, z:integer;
+	arr : array [1..10] of real;
+begin
+	summ(arr, y);
+end.

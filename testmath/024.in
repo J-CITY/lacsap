@@ -1,0 +1,7 @@
+program main;
+var
+	a,b,c,a1,b1:integer;
+begin
+  if (((b=1) or (c=1)) and (a1 <= b1)) then
+    a := b;
+end.

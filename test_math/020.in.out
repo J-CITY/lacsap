@@ -1,0 +1,31 @@
+integer  | types    | integer
+real     | types    | real
+char     | types    | char
+maxint   | consts   | integer
+false    | consts   | integer
+true     | consts   | integer
+boolean  | types    | boolean {true false}
+nil      | vars     | pointer nil 
+PROGRAM : main
+a        | vars     | real
+b        | vars     | real
+c        | vars     | real
+
+ÀÄÄÄÄBLOCK
+     ÀÄÄÄÄbegin
+               ÚÄÄÄÄa:identifier{real}
+
+          ÀÄÄÄÄ:=:operation{real}
+                    ÚÄÄÄÄa:identifier{real}
+
+               ÀÄÄÄÄ*:operation{real}
+                         ÚÄÄÄÄc:identifier{real}
+
+                    ÀÄÄÄÄ-:operation{real}
+                         ÀÄÄÄÄb:identifier{real}
+
+
+
+
+
+

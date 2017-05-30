@@ -1,0 +1,22 @@
+integer | types | integer
+real | types | real
+char | types | char
+maxint | consts | integer
+false | consts | integer
+true | consts | integer
+boolean | types | boolean {true false}
+nil | vars | pointer nil
+PROGRAM : main
+i | vars | integer
+
+\____BLOCK
+     \____begin
+                    /----i:identifier{integer}
+
+               /----<=:operation{boolean {true false}}
+                    \____10:literalInt{integer}
+
+
+          \____while
+               \____begin
+                    \____break

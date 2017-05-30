@@ -1,0 +1,78 @@
+integer  | types    | integer
+real     | types    | real
+char     | types    | char
+maxint   | consts   | integer
+false    | consts   | integer
+true     | consts   | integer
+boolean  | types    | boolean {true false}
+nil      | vars     | pointer nil 
+PROGRAM : main
+a        | vars     | array
+     index0 limit
+          min : 1:literalInt{integer}
+
+          max : 5:literalInt{integer}
+
+          type : integer
+     type : record
+          val0 vals array
+               index0 limit
+                    min : 1:literalInt{integer}
+
+                    max : 5:literalInt{integer}
+
+                    type : integer
+               type : integer
+
+b        | vars     | array
+     index0 limit
+          min : 1:literalInt{integer}
+
+          max : 5:literalInt{integer}
+
+          type : integer
+     type : record
+          val0 vals array
+               index0 limit
+                    min : 1:literalInt{integer}
+
+                    max : 5:literalInt{integer}
+
+                    type : integer
+               type : integer
+
+
+ÀÄÄÄÄBLOCK
+     ÀÄÄÄÄbegin
+                    ÚÄÄÄÄ[]
+                         ÀÄÄÄÄ1:literalInt{integer}
+
+
+               ÚÄÄÄÄa:identifier{integer}
+                    ÀÄÄÄÄ.
+                         ÀÄÄÄÄvals:identifier{integer}
+                              ÀÄÄÄÄ[]
+                                   ÀÄÄÄÄ2:literalInt{integer}
+
+
+
+
+
+          ÀÄÄÄÄ:=:operation{integer}
+                    ÚÄÄÄÄ[]
+                         ÀÄÄÄÄ2:literalInt{integer}
+
+
+               ÀÄÄÄÄb:identifier{integer}
+                    ÀÄÄÄÄ.
+                         ÀÄÄÄÄvals:identifier{integer}
+                              ÀÄÄÄÄ[]
+                                   ÀÄÄÄÄ1:literalInt{integer}
+
+
+
+
+
+
+
+

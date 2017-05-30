@@ -1,0 +1,37 @@
+integer | types | integer
+real | types | real
+char | types | char
+maxint | consts | integer
+false | consts | integer
+true | consts | integer
+boolean | types | boolean {true false}
+nil | vars | pointer nil
+PROGRAM : main
+sum | vars | real
+k | vars | real
+l | vars | integer
+m | vars | integer
+i | vars | integer
+
+\____BLOCK
+     \____begin
+                    /----i:identifier{integer}
+
+               /----:=:operation{integer}
+                    \____1:literalInt{integer}
+
+
+          \____to
+               \____100:literalInt{integer}
+
+               \____begin
+                         /----k:identifier{real}
+
+                    \____:=:operation{real}
+                              /----3.14:literalFloat{real}
+
+                         \____+:operation{real}
+                                   /----i:identifier{integer}
+
+                              \____*:operation{integer}
+                                   \____2:literalInt{integer}

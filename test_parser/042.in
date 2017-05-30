@@ -1,0 +1,6 @@
+program main;
+var
+   c: integer;
+begin
+	i := 5;
+end.

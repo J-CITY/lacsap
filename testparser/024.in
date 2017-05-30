@@ -1,0 +1,12 @@
+program main;
+const
+  N = 20;
+Var
+  i : integer;
+
+begin
+  while i <= N do
+  begin
+    i := i + 1;
+  end;
+end.

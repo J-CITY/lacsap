@@ -1,0 +1,6 @@
+program main;
+var
+	i:integer;
+begin
+	i := ord(#35);
+end.

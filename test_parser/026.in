@@ -1,0 +1,13 @@
+program main;
+var
+  i, N, j: integer;
+
+begin
+  i := 1;
+  for i := 1 to N do
+  begin
+	for j := N downto 1 do
+		j := 1 + j;
+	i := 1 + i;
+  end;
+end.

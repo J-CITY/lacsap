@@ -1,0 +1,15 @@
+program main;
+var
+   i: integer;
+	c:char;
+Var
+  mas : array[1..5] of Record
+    HouseNumber : Integer;
+    StreetName : array[1..20] of char;
+  End;
+
+begin
+  i := mas[2].HouseNumber;
+  c := mas[2].StreetName[10];
+
+end.

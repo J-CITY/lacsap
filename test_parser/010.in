@@ -1,0 +1,10 @@
+program main;
+var
+      sum, k: real;
+      l, m, i: integer;
+begin
+  for i := 1 to 100 do
+  begin
+    k := 3.14 + i*(2);
+  end;
+end.

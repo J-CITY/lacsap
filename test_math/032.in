@@ -1,0 +1,6 @@
+program main;
+var
+a,b:real;
+begin
+  a := b +/ b;
+end.

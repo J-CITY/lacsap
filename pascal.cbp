@@ -34,7 +34,15 @@
 			<Add option="-Wall" />
 			<Add option="-fexceptions" />
 		</Compiler>
+		<Unit filename="asmCmd.cpp" />
+		<Unit filename="asmCmd.h" />
+		<Unit filename="errors.h" />
 		<Unit filename="main.cpp" />
+		<Unit filename="parseBlock.cpp" />
+		<Unit filename="parseExpression.cpp" />
+		<Unit filename="parser.cpp" />
+		<Unit filename="parser.h" />
+		<Unit filename="parserPrint.cpp" />
 		<Unit filename="scanner.cpp" />
 		<Unit filename="scanner.h" />
 		<Extensions>

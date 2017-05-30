@@ -1,0 +1,20 @@
+program main;
+function sumf(x, y: integer): integer;
+var
+	c:char;
+function sum(x, y: integer): integer;
+var
+	c:char;
+begin
+  result := x + y;
+end;
+
+begin
+  result := x + y;
+end;
+
+var
+	x1, y:integer;
+begin
+	sumf(x1, y);
+end.

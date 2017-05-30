@@ -1,0 +1,8 @@
+program main;
+var
+	a:record
+		val:integer;
+	end;
+begin
+  a.1 := 1;
+end.

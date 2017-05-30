@@ -1,0 +1,8 @@
+program main;
+var
+      sum, k: real;
+      l, m, i: integer;
+
+begin
+  sum := 1 + m;
+end.

@@ -1,0 +1,6 @@
+program main;
+var
+	b,n:char;
+begin
+	b := not(n);
+end.

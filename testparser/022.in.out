@@ -1,0 +1,18 @@
+integer | types | integer
+real | types | real
+char | types | char
+maxint | consts | integer
+false | consts | integer
+true | consts | integer
+boolean | types | boolean {true false}
+nil | vars | pointer nil
+PROGRAM : main
+c | vars | char
+
+\____BLOCK
+     \____begin
+               /----c:identifier{char}
+
+          \____:=:operation{char}
+               \____chr:CHR{char}
+                    \____44:literalInt{integer}

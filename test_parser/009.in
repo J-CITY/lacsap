@@ -1,0 +1,21 @@
+program main;
+type
+  int = integer;
+  Matr = array [1..10] of integer;
+var
+      qwert : int;
+      arrrr : Matr;
+      sum: real;
+      l, m: integer;
+
+Procedure Summa1(Var Sum : integer; a, b : integer);
+Var
+  p, i: integer;
+  arrrr : Matr;
+Begin
+
+End;
+
+begin
+
+end.

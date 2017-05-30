@@ -1,0 +1,19 @@
+integer | types | integer
+real | types | real
+char | types | char
+maxint | consts | integer
+false | consts | integer
+true | consts | integer
+boolean | types | boolean {true false}
+nil | vars | pointer nil
+PROGRAM : main
+b | vars | boolean {true false}
+n | vars | boolean {true false}
+
+\____BLOCK
+     \____begin
+               /----b:identifier{boolean {true false}}
+
+          \____:=:operation{boolean {true false}}
+               \____not:keyword{boolean {true false}}
+                    \____n:identifier{boolean {true false}}

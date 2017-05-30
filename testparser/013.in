@@ -1,0 +1,12 @@
+program main;
+const
+   n = 5;
+type
+   mas = array[1..n] of integer;
+var
+   a: mas;
+   i: integer;
+
+begin
+  i := a[1] + 3 * a[n];
+end.

@@ -1,0 +1,7 @@
+program main;
+var
+   c: array [3.14..4] of integer;
+
+begin
+
+end.

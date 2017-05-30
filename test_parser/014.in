@@ -1,0 +1,13 @@
+program main;
+var
+   i: integer;
+	c:char;
+Var
+  Address : Record
+    HouseNumber : Integer;
+    StreetName : array[1..20] of char;
+  End;
+
+begin
+  c := address.StreetName[10];
+end.

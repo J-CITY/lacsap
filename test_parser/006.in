@@ -1,0 +1,16 @@
+program main;
+type
+  int = integer;
+  Matr = array [1..10] of integer;
+var
+      a1 : record
+        h1 : int;
+        p1 : char;
+        r1 : record
+          k1,b1,c1:real;
+          f1,d1:integer;
+        end;
+      End;
+begin
+
+end.

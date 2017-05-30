@@ -1,0 +1,6 @@
+program main;
+var
+	a,b:integer;
+begin
+  	a := b div a;
+end.

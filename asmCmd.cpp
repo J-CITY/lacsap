@@ -1,0 +1,79 @@
+#include "asmCmd.h"
+
+std::string asmOperationToStr(AsmOperation op) {
+    switch(op) {
+    case AsmOperation::asm_push:
+        return "push";
+    case AsmOperation::asm_pop:
+        return "pop";
+    case AsmOperation::asm_add:
+        return "add";
+    case AsmOperation::asm_not:
+        return "not";
+    case AsmOperation::asm_addsd:
+        return "addsd";
+    case AsmOperation::asm_imul:
+        return "imul";
+    case AsmOperation::asm_mulsd:
+        return "mulsd";
+    case AsmOperation::asm_sub:
+        return "sub";
+    case AsmOperation::asm_subsd:
+        return "subsd";
+    case AsmOperation::asm_ret:
+        return "ret";
+    case AsmOperation::asm_call:
+        return "call";
+    case AsmOperation::asm_mov:
+        return "mov";
+    case AsmOperation::asm_movq:
+        return "movq";
+    case AsmOperation::asm_cvtsi2sd:
+        return "cvtsi2sd";
+    case AsmOperation::asm_xor:
+        return "xor";
+    case AsmOperation::asm_or:
+        return "or";
+    case AsmOperation::asm_and:
+        return "and";
+    case AsmOperation::asm_divsd:
+        return "divsd";
+    case AsmOperation::asm_idiv:
+        return "idiv";
+    case AsmOperation::asm_sar:
+        return "sar";
+    case AsmOperation::asm_sal:
+        return "sal";
+    case AsmOperation::asm_lea:
+        return "lea";
+    case AsmOperation::asm_cmp:
+        return "cmp";
+    case AsmOperation::asm_jmp:
+        return "jmp";
+    case AsmOperation::asm_jz:
+        return "jz";
+    case AsmOperation::asm_jnz:
+        return "jnz";
+    case AsmOperation::asm_jc:
+        return "jc";
+    case AsmOperation::asm_jnc:
+        return "jnc";
+    case AsmOperation::asm_ja:
+        return "ja";
+    case AsmOperation::asm_jna:
+        return "jna";
+
+    case AsmOperation::asm_jg:
+        return "jg";
+    case AsmOperation::asm_jge:
+        return "jge";
+    case AsmOperation::asm_jl:
+        return "jl";
+    case AsmOperation::asm_jle:
+        return "jle";
+    case AsmOperation::asm_test:
+        return "test";
+    default:
+        return "default";
+    }
+}

@@ -1,0 +1,54 @@
+integer | types | integer
+real | types | real
+char | types | char
+maxint | consts | integer
+false | consts | integer
+true | consts | integer
+boolean | types | boolean {true false}
+nil | vars | pointer nil
+PROGRAM : main
+sumf | func | integer
+x1 | vars | integer
+y | vars | integer
+z | vars | integer
+
+     /----FUNC : sumf integer
+          Input
+          x | vars | integer
+          y | vars | integer
+          Local
+          result | vars | integer
+          c | vars | char
+          \____BLOCK
+               \____begin
+                         /----result:identifier{integer}
+
+                    \____:=:operation{integer}
+                              /----x:identifier{integer}
+
+                         \____+:operation{integer}
+                              \____y:identifier{integer}
+
+
+
+
+
+
+\____BLOCK
+     \____begin
+               /----z:identifier{integer}
+
+          \____:=:operation{integer}
+                    /----sumf:identifier{integer}
+                              /----x1:identifier{integer}
+
+                         \____func
+                              \____y:identifier{integer}
+
+
+
+               \____+:operation{integer}
+                         /----2:literalInt{integer}
+
+                    \____*:operation{integer}
+                         \____x1:identifier{integer}

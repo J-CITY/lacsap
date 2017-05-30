@@ -1,0 +1,58 @@
+integer | types | integer
+real | types | real
+char | types | char
+maxint | consts | integer
+false | consts | integer
+true | consts | integer
+boolean | types | boolean {true false}
+nil | vars | pointer nil
+PROGRAM : main
+i | vars | integer
+c | vars | char
+mas | vars | array
+     index0 limit
+          min : 1:literalInt{integer}
+
+          max : 5:literalInt{integer}
+
+          type : integer
+     type : record
+          val0 housenumber integer
+          val1 streetname array
+               index0 limit
+                    min : 1:literalInt{integer}
+
+                    max : 20:literalInt{integer}
+
+                    type : integer
+               type : char
+
+
+\____BLOCK
+               /----i:identifier{integer}
+
+          /----:=:operation{integer}
+                    /----[]
+                         \____2:literalInt{integer}
+
+
+               \____mas:identifier{integer}
+                    \____.
+                         \____housenumber:identifier{integer}
+
+
+
+
+     \____begin
+               /----c:identifier{char}
+
+          \____:=:operation{char}
+                    /----[]
+                         \____2:literalInt{integer}
+
+
+               \____mas:identifier{char}
+                    \____.
+                         \____streetname:identifier{char}
+                              \____[]
+                                   \____10:literalInt{integer}

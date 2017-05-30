@@ -1,0 +1,54 @@
+integer | types | integer
+real | types | real
+char | types | char
+maxint | consts | integer
+false | consts | integer
+true | consts | integer
+boolean | types | boolean {true false}
+nil | vars | pointer nil
+PROGRAM : main
+int | types | integer
+matr | types | array
+     index0 limit
+          min : 1:literalInt{integer}
+
+          max : 10:literalInt{integer}
+
+          type : integer
+     type : integer
+qwert | vars | integer
+arrrr | vars | array
+     index0 limit
+          min : 1:literalInt{integer}
+
+          max : 10:literalInt{integer}
+
+          type : integer
+     type : integer
+sum | vars | real
+l | vars | integer
+m | vars | integer
+fac | func | integer
+
+     /----FUNC : fac integer
+          Input
+          n | vars | integer
+          Local
+          result | vars | integer
+          p | vars | integer
+          i | vars | integer
+          arrrr | vars | array
+               index0 limit
+                    min : 1:literalInt{integer}
+
+                    max : 10:literalInt{integer}
+
+                    type : integer
+               type : integer
+          \____BLOCK
+               \____begin
+
+
+
+\____BLOCK
+     \____begin

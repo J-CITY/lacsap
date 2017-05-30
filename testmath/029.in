@@ -1,0 +1,12 @@
+program main;
+var
+	a:real;
+	b:record
+		val:integer;
+		notval:char;
+	end;
+begin
+  a := b.val;
+  b.notval := #45;
+  b.notval := 'c';
+end.

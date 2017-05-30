@@ -1,0 +1,9 @@
+program main;
+const  MaxData  = 1024 * 64 - 16;
+       NumChars = Ord('Z') - Ord('A') + 1;
+       z = 'c';
+       c = true;
+       withType = 123 : integer;
+begin
+
+end.

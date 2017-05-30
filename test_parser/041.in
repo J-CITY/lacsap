@@ -1,0 +1,7 @@
+program main;
+var
+   c: integer;
+	c:char;
+begin
+
+end.

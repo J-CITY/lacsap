@@ -1,0 +1,6 @@
+program main;
+var
+	a,b,c:real;
+begin
+    a:= a * (c - b);
+end.

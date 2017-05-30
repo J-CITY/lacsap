@@ -1,0 +1,23 @@
+integer  | types    | integer
+real     | types    | real
+char     | types    | char
+maxint   | consts   | integer
+false    | consts   | integer
+true     | consts   | integer
+boolean  | types    | boolean {true false}
+nil      | vars     | pointer nil 
+PROGRAM : main
+c        | vars     | char
+
+ÀÄÄÄÄBLOCK
+     ÀÄÄÄÄbegin
+               ÚÄÄÄÄc:identifier{char}
+
+          ÀÄÄÄÄ:=:operation{char}
+               ÀÄÄÄÄchr:CHR{char}
+                    ÀÄÄÄÄ44:literalInt{integer}
+
+
+
+
+

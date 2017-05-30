@@ -1,0 +1,6 @@
+program main;
+var
+	a,b:integer;
+begin
+  a := a shl 2;
+end.

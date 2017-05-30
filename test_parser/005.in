@@ -1,0 +1,12 @@
+program main;
+type
+  int = integer;
+  Matr = array [1..10] of integer;
+var
+      r : record
+        h : integer;
+        p : char;
+      End;
+begin
+
+end.

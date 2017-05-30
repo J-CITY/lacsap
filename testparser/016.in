@@ -1,0 +1,11 @@
+program main;
+var
+   i: integer;
+   ip:^integer;
+	 c:char;
+begin
+  i := ip^;
+  ip^ := 13;
+  ip := @i;
+
+end.

@@ -1,0 +1,9 @@
+program main;
+var
+	b:integer;
+	a : record
+		a1:real;
+	end;
+begin
+  a.[1] := b;
+end.

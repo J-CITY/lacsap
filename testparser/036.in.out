@@ -1,0 +1,45 @@
+integer | types | integer
+real | types | real
+char | types | char
+maxint | consts | integer
+false | consts | integer
+true | consts | integer
+boolean | types | boolean {true false}
+nil | vars | pointer nil
+PROGRAM : main
+sump | proc |
+x1 | vars | integer
+y | vars | integer
+z | vars | integer
+
+     /----PROC : sump
+          Input
+          x | vars | integer
+          y | vars | integer
+          z | vars | integer
+          Local
+          c | vars | char
+          \____BLOCK
+               \____begin
+                         /----z:identifier{integer}
+
+                    \____:=:operation{integer}
+                              /----x:identifier{integer}
+
+                         \____+:operation{integer}
+                              \____y:identifier{integer}
+
+
+
+
+
+
+\____BLOCK
+     \____begin
+          \____sump:identifier{}
+                    /----x1:identifier{integer}
+
+               \____func
+                    \____y:identifier{integer}
+
+                    \____z:identifier{integer}

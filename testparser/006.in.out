@@ -1,0 +1,32 @@
+integer | types | integer
+real | types | real
+char | types | char
+maxint | consts | integer
+false | consts | integer
+true | consts | integer
+boolean | types | boolean {true false}
+nil | vars | pointer nil
+PROGRAM : main
+int | types | integer
+matr | types | array
+     index0 limit
+          min : 1:literalInt{integer}
+
+          max : 10:literalInt{integer}
+
+          type : integer
+     type : integer
+a1 | vars | record
+     val0 h1 integer
+     val1 p1 char
+     val2 r1 record
+          val0 k1 real
+          val1 b1 real
+          val2 c1 real
+          val3 f1 integer
+          val4 d1 integer
+
+
+
+\____BLOCK
+     \____begin

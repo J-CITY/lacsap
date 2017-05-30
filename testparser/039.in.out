@@ -1,0 +1,58 @@
+integer | types | integer
+real | types | real
+char | types | char
+maxint | consts | integer
+false | consts | integer
+true | consts | integer
+boolean | types | boolean {true false}
+nil | vars | pointer nil
+PROGRAM : main
+summ | func | integer
+x1 | vars | integer
+y | vars | integer
+z | vars | integer
+arr | vars | array
+     index0 limit
+          min : 1:literalInt{integer}
+
+          max : 10:literalInt{integer}
+
+          type : integer
+     type : real
+
+     /----FUNC : summ integer
+          Input
+          arr | vars | array
+               type : real
+          y | vars | integer
+          Local
+          result | vars | integer
+          \____BLOCK
+               \____begin
+                         /----result:identifier{integer}
+
+                    \____:=:operation{integer}
+                              /----1:literalInt{integer}
+
+                         \____+:operation{integer}
+                              \____y:identifier{integer}
+
+
+
+
+
+
+\____BLOCK
+     \____begin
+          \____summ:identifier{integer}
+                    /----arr:identifier{array
+                              index0 limit
+                                   min : 1:literalInt{integer}
+
+                                   max : 10:literalInt{integer}
+
+                                   type : integer
+                              type : real}
+
+               \____func
+                    \____y:identifier{integer}

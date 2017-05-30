@@ -1,0 +1,7 @@
+program main;
+var
+   ip:^integer;
+begin
+  ip := nil;
+
+end.

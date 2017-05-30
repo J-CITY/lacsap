@@ -1,0 +1,14 @@
+program main;
+
+procedure sump(x, y: integer; var z: integer);
+var
+	c:char;
+begin
+  z := x + y;
+end;
+
+var
+	x1, y, z:integer;
+begin
+	sump(x1, y, z);
+end.

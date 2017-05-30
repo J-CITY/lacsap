@@ -1,0 +1,8 @@
+program main;
+Var
+  i : integer;
+
+begin
+  while i <= 100 do
+  	;
+end.

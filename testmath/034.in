@@ -1,0 +1,7 @@
+program main;
+var
+	b:integer;
+	a:array[1..5] of integer;
+begin
+  a[2+1 := b;
+end.

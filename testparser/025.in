@@ -1,0 +1,10 @@
+program main;
+var
+  i, N: integer;
+
+begin
+  i := 1;
+  repeat
+    i:=i+1;
+  until i = N + 1;
+end.

@@ -1,0 +1,13 @@
+program main;
+type
+  int = integer;
+  Matr = array [1..10] of integer;
+var
+      qwert : int;
+      arrrr : Matr;
+      sum: real;
+      l, m: integer;
+
+begin
+
+end.

@@ -1,0 +1,8 @@
+program main;
+var
+	x:real;
+	n:integer;
+	sum:array [1..10] of integer;
+begin
+  write('!!!!!!: ', x, n, sum[1]);
+end.

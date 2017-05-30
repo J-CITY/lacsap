@@ -1,0 +1,49 @@
+integer  | types    | integer
+real     | types    | real
+char     | types    | char
+maxint   | consts   | integer
+false    | consts   | integer
+true     | consts   | integer
+boolean  | types    | boolean {true false}
+nil      | vars     | pointer nil 
+PROGRAM : main
+a        | vars     | real
+b        | vars     | record
+     val0 val integer
+     val1 notval char
+
+
+ÀÄÄÄÄBLOCK
+               ÚÄÄÄÄa:identifier{real}
+
+          ÚÄÄÄÄ:=:operation{real}
+               ÀÄÄÄÄb:identifier{integer}
+                    ÀÄÄÄÄ.
+                         ÀÄÄÄÄval:identifier{integer}
+
+
+
+
+     ÀÄÄÄÄbegin
+               ÚÄÄÄÄb:identifier{char}
+                    ÀÄÄÄÄ.
+                         ÀÄÄÄÄnotval:identifier{char}
+
+
+
+          ÀÄÄÄÄ:=:operation{char}
+               ÀÄÄÄÄ-:literalChar{char}
+
+
+               ÚÄÄÄÄb:identifier{char}
+                    ÀÄÄÄÄ.
+                         ÀÄÄÄÄnotval:identifier{char}
+
+
+
+          ÀÄÄÄÄ:=:operation{char}
+               ÀÄÄÄÄ'c':literalChar{char}
+
+
+
+

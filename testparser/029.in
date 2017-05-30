@@ -1,0 +1,5 @@
+program main;
+begin
+  if 2 > 0 then
+  	continue;
+end.

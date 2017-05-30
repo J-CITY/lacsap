@@ -1,0 +1,11 @@
+program main;
+var
+	b,n:integer;
+function sum(x, y: char): integer;
+begin
+	result := 1;
+end;
+
+begin
+	b:= sum(b, n);
+end.

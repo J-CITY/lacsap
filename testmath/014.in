@@ -1,0 +1,7 @@
+program main;
+var
+	a:real;
+	b:integer;
+begin
+  a := -a / 2;
+end.

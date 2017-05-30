@@ -1,0 +1,41 @@
+integer  | types    | integer
+real     | types    | real
+char     | types    | char
+maxint   | consts   | integer
+false    | consts   | integer
+true     | consts   | integer
+boolean  | types    | boolean {true false}
+nil      | vars     | pointer nil 
+PROGRAM : main
+i        | vars     | integer
+ip       | vars     | pointer integer
+c        | vars     | char
+
+ÀÄÄÄÄBLOCK
+               ÚÄÄÄÄi:identifier{integer}
+
+          ÚÄÄÄÄ:=:operation{integer}
+               ÀÄÄÄÄ^:^{integer}
+                    ÀÄÄÄÄip:identifier{pointer integer}
+
+
+
+     ÀÄÄÄÄbegin
+               ÚÄÄÄÄ^:^{integer}
+                    ÀÄÄÄÄip:identifier{pointer integer}
+
+
+          ÀÄÄÄÄ:=:operation{integer}
+               ÀÄÄÄÄ13:literalInt{integer}
+
+
+               ÚÄÄÄÄip:identifier{pointer integer}
+
+          ÀÄÄÄÄ:=:operation{pointer integer}
+               ÀÄÄÄÄ@:uoperation{pointer integer}
+                    ÀÄÄÄÄi:identifier{integer}
+
+
+
+
+

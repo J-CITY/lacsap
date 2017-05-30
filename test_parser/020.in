@@ -1,0 +1,9 @@
+program main;
+var
+  b: boolean;
+	i:integer;
+	c:char;
+begin
+	c := 'A';
+	i := ord(c);
+end.

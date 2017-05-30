@@ -1,0 +1,7 @@
+program main; { type }
+type
+  int = integer;
+  Matr = array [1..10] of integer;
+begin
+
+end.

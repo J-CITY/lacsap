@@ -1,0 +1,7 @@
+program main;
+const  a = 1;
+       b = 132;
+
+begin
+
+end.

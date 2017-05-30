@@ -1,0 +1,8 @@
+program main; {int := real}
+var
+      sum, k: real;
+      l, m, i: integer;
+
+begin
+  l := sum + m * ( l div m);
+end.

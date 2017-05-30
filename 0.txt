@@ -1,0 +1,90 @@
+program main;
+const  Max  = 10 * 2 - 16;
+       NumChars = Ord('Z') - Ord('A') + 1;
+var
+	a, b:integer;
+	_c, _v:char;
+begin
+
+write(Max);
+write(NumChars);
+
+_c := 'z';
+_v := #67;
+write(_c,_v);
+
+a := ord(_v) + Max;
+_v := chr(a);
+write(a, _v);
+
+end.
+
+
+
+{
+program p;
+var
+    i:integer;
+	f:real;
+	c:char;
+
+begin
+	f:=10.5;
+	i := 10;
+	c := 'c';
+	read(f);
+	write(f);
+	read(i);
+	write(i);
+	read(c);
+	write(c);
+end.
+}
+{
+program p;
+var
+    i:integer;
+	f:real;
+	c:char;
+
+function f1(int :integer) : integer;
+var i : integer;
+begin
+	read(int);
+	write(int);
+end;
+	
+begin
+	f1(0);
+end.}
+{
+program p;
+var
+    i:integer;
+	f:real;
+	c:char;
+
+function f1(var int :integer) : integer;
+var i : integer;
+begin
+	read(int);
+	write(int);
+end;
+	
+begin
+	i := 3;
+	f1(i);
+end.}
+
+{
+program p;
+function f1(int :integer) : integer;
+var i : integer;
+begin
+	read(i);
+	write(i);
+end;
+	
+begin
+	f1(0);
+end.}
