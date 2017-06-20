@@ -101,7 +101,8 @@ void Scanner::init() {
 		{ "var",      (int)Symbols::sys_var      },
 		{ "while",    (int)Symbols::sys_while    },
 		{ "with",     (int)Symbols::sys_with     },
-		{ "xor",      (int)Symbols::sys_xor      }
+		{ "xor",      (int)Symbols::sys_xor      },
+		{ "return",   (int)Symbols::sys_return   }
     };
 
 	keyWords.insert("and");
@@ -147,6 +148,7 @@ void Scanner::init() {
 	keyWords.insert("while");
 	keyWords.insert("with");
 	keyWords.insert("xor");
+	keyWords.insert("return");
 }
 
 std::string Scanner::getSymbolTypeStr(int type) {

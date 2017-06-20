@@ -41,12 +41,30 @@ enum class AsmOperation {
     asm_lea,
     asm_cmp,
     asm_test,
-    asm_not
+    asm_not,
+    asm_shr,
+    asm_shl
 
+};
+
+enum class AsmOperationType {
+    line,
+    section,
+    global,
+    format,
+    constant,
+    reg,
+    mark,
+    imn,
+    ind,
+    cmd0,
+    cmd1,
+    cmd2
 };
 
 class AsmCode {
 public:
+    AsmOperationType _type;
     AsmCode(){}
     virtual void print() = 0;
 };
@@ -55,6 +73,7 @@ class AsmLine:public AsmCode {
 public:
     std::string cmd = "";
     AsmLine(std::string _cmd) {
+        _type = AsmOperationType::line;
         cmd = _cmd;
     }
     void print() {
@@ -66,6 +85,7 @@ class AsmSection:public AsmCode {
 public:
     std::string name = "";
     AsmSection(std::string _n) {
+        _type = AsmOperationType::section;
         name = _n;
     }
     void print() {
@@ -77,6 +97,7 @@ class AsmGlobal:public AsmCode {
 public:
     std::string name = "";
     AsmGlobal(std::string _n) {
+        _type = AsmOperationType::global;
         name = _n;
     }
     void print() {
@@ -88,7 +109,9 @@ public:
 class AsmFormat:public AsmCode {
 public:
     std::vector<std::string> formats;
-    AsmFormat() {}
+    AsmFormat() {
+        _type = AsmOperationType::format;
+    }
     void Add(std::string s) {
         formats.push_back(s);
     }
@@ -101,13 +124,19 @@ public:
         for(unsigned int i = 0; i < formats.size(); ++i) {
             std::cout << "format" + std::to_string(i) + ": db " + "\"" +formats[i] + "\"" + ", 0\n";
         }
+        std::cout << "_hOut : dq 0\n";
     }
 };
 
 class AsmConstant:public AsmCode {
 public:
     std::map<std::string, std::string> formats;
-    AsmConstant() {}
+    AsmConstant() {
+        _type = AsmOperationType::constant;
+    }
+    void Add(std::string name, std::string val) {
+        formats.insert ( std::pair<std::string, std::string>(val,"_"+name) );
+    }
     void Add(std::string s) {
         if(s == "true") {
             formats.insert ( std::pair<std::string, std::string>("1","_"+s) );
@@ -159,6 +188,7 @@ public:
     std::string name;
     AsmReg(std::string _n) {
         name = _n;
+        _type = AsmOperationType::reg;
     }
     void print() {
         if(type == AsmSizeof::s_dw) {
@@ -181,6 +211,7 @@ public:
     AsmMark(std::string _n, bool _b = true) {
         colon = _b;
         name = _n;
+        _type = AsmOperationType::mark;
     }
     void print() {
         std::cout << name;
@@ -196,6 +227,7 @@ public:
     std::string var;
     AsmImn(std::string _var) {
         var = _var;
+        _type = AsmOperationType::imn;
     }
     void print() {
         std::cout << " " << var;
@@ -213,11 +245,12 @@ public:
     bool rb = false;
     AsmOperand* shift = nullptr;
     std::string var;
-    AsmInd(std::string _var, AsmSizeof _t, bool _rb, AsmOperand* _sh = nullptr) {
+    AsmInd(std::string _var, AsmSizeof _t=AsmSizeof::s_def, bool _rb=false, AsmOperand* _sh = nullptr) {
         var = _var;
         type = _t;
         rb = _rb;
         shift = _sh;
+        _type = AsmOperationType::ind;
     }
     void print() {
         if(type == AsmSizeof::s_dw) {
@@ -256,6 +289,7 @@ public:
 
     AsmCmd(AsmOperation _op) {
         operation = _op;
+        _type = AsmOperationType::cmd0;
     }
 
     AsmCmd(AsmOperation _op, AsmOperand *_l,
@@ -266,6 +300,7 @@ public:
         b1 = _b1;
         s1 = _s1;
         s1str = _s1str;
+        _type = AsmOperationType::cmd1;
     }
 
     AsmCmd(AsmOperation _op, AsmOperand *_l, AsmOperand *_r,
@@ -282,6 +317,7 @@ public:
         s2 = _s2;
         s1str = _s1str;
         s2str = _s2str;
+        _type = AsmOperationType::cmd2;
     }
     void print() {
         std::cout << asmOperationToStr(operation) << " ";
@@ -394,6 +430,7 @@ public:
 
     void print() {
         for(unsigned int i = 0; i < asmcode.size(); ++i) {
+            //    std::cout << i << ": ";
             asmcode[i]->print();
         }
     }

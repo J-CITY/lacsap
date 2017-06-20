@@ -44,6 +44,10 @@ std::string asmOperationToStr(AsmOperation op) {
         return "sar";
     case AsmOperation::asm_sal:
         return "sal";
+    case AsmOperation::asm_shr:
+        return "shr";
+    case AsmOperation::asm_shl:
+        return "shl";
     case AsmOperation::asm_lea:
         return "lea";
     case AsmOperation::asm_cmp:

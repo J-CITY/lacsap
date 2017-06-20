@@ -34,6 +34,8 @@ enum class MethodOfTransmission {
 
 class TreeNode {
 public:
+    //std::string typenode = "";
+
 	int typeForPrint=0;
 	std::string nameNode = "";
 	int id;
@@ -41,7 +43,10 @@ public:
 	std::vector<TreeNode*> children;
 	virtual void print(int l) = 0;
 	virtual ~TreeNode() {};
-	virtual void generateAsm() {};
+	virtual void generateAsm(bool ifFunc, bool needAsm) {};
+
+	//bool ifFunc = false;
+	//bool needAsm = true;
 };
 
 class Descriptor {
@@ -63,6 +68,9 @@ public:
 };
 
 extern std::stack<int> stackBreak;
+extern std::stack<int> stackReturn;
+extern int intGetch;
+extern int sizeReturns;
 extern AsmReg *rax;
 extern AsmReg *rdx;
 extern AsmReg *rcx;
@@ -376,6 +384,21 @@ public:
 	}
 };
 
+void generateVars(SymbolTable *symt, bool ifFunc);
+std::string genAsmDerective(Descriptor *type);
+
+void genAsmCodeForIdent(TreeNode *ident, TreeNode *expr, AsmOperand* shift);
+void genAsmCodeForIdentFunc(TreeNode *ident, TreeNode *expr, AsmOperand* shift);
+void generateAsmCode(TreeNode *root, bool ifFunc, bool needAsm, bool ifRead);
+int pushFuncParam(bool ifFunc, std::string name, Descriptor *descr, int _mov);
+extern int mot;//-1 var; 1 val; 0 def;
+extern SymbolTable *baseTable;
+extern SymbolTable *mainTable;
+extern SymbolStack *Stack;
+extern SymbolStack *symbolStack;
+
+
+
 class StringNode:public TreeNode {
 public:
 	std::string nameLex;
@@ -383,122 +406,15 @@ public:
 		nameNode = _chN;
 		nameLex = lex.lexem;
 		id = lex.val;
+
 	}
 	void print(int l) {
 		std::cout << nameLex << ":" << nameNode;
 	}
-	void generateAsm() {
+	void generateAsm(bool ifFunc, bool needAsm) {
 
 	}
 	~StringNode() {}
-};
-
-class ActionNode:public TreeNode {
-public:
-	std::string nameLex = "";
-	ActionNode(std::string in) {
-		nameNode = in;
-		nameLex = in;
-	}
-	void print(int l) {
-		std::cout << nameNode;
-	}
-	void generateAsm() {
-        if(nameLex == "write") {
-
-        }
-	}
-	~ActionNode(){}
-};
-
-class BlockActionNode:public ActionNode {
-public:
-	BlockActionNode(std::string in):ActionNode(in) {}
-	~BlockActionNode() {}
-	void generateAsm() {
-
-	}
-};
-
-class AssignActionNode:public ActionNode {
-public:
-	AssignActionNode(std::string in):ActionNode(in) {}
-	~AssignActionNode() {}
-	void generateAsm() {
-
-	}
-};
-
-class IfActionNode:public ActionNode {
-public:
-	IfActionNode(std::string in):ActionNode(in) {}
-	~IfActionNode() {}
-	void generateAsm() {
-
-	}
-};
-
-class ElseActionNode:public ActionNode {
-public:
-	ElseActionNode(std::string in):ActionNode(in) {}
-	~ElseActionNode() {}
-	void generateAsm() {
-
-	}
-};
-
-class ForActionNode:public ActionNode {
-public:
-	ForActionNode(std::string in):ActionNode(in) {}
-	~ForActionNode() {}
-	void generateAsm() {
-
-	}
-};
-
-class WhileActionNode:public ActionNode {
-public:
-	WhileActionNode(std::string in):ActionNode(in) {}
-	~WhileActionNode() {}
-	void generateAsm() {
-
-	}
-};
-
-class RepeatActionNode:public ActionNode {
-public:
-	RepeatActionNode(std::string in):ActionNode(in) {}
-	~RepeatActionNode() {}
-    void generateAsm() {
-
-	}
-};
-
-class BreakActionNode:public ActionNode {
-public:
-	BreakActionNode(std::string in):ActionNode(in){}
-	~BreakActionNode() {}
-	void generateAsm() {
-
-	}
-};
-
-class ContinueActionNode:public ActionNode {
-public:
-	ContinueActionNode(std::string in):ActionNode(in) {}
-	~ContinueActionNode() {}
-	void generateAsm() {
-
-	}
-};
-
-class FreeActionNode:public ActionNode {
-public:
-	FreeActionNode(std::string in):ActionNode(in) {}
-	~FreeActionNode() {}
-	void generateAsm() {
-
-	}
 };
 
 class ExpressionNode:public TreeNode {
@@ -508,6 +424,7 @@ public:
 	int operation_type;
 	std::string nameLex;
 	ExpressionNode(std::string _chN, Lexem lex) {
+
 		nameNode = _chN;
 		operation_type = lex.type;
 		nameLex = lex.lexem;
@@ -523,18 +440,297 @@ public:
 		std::cout << "}";
 	}
 	~ExpressionNode() {}
-	void generateAsm() {
+	void generateAsm(bool ifFunc, bool needAsm) {
+	    if(needAsm) {
+	    AsmOperand* shift = nullptr;
+        if(nameLex == "^" || nameLex == "@") {
+            if(___shift != 0) {
+                ASM.Add(AsmOperation::asm_pop, rax);
+                ___shift--;
+                while(___shift != 0) {
+                    ASM.Add(AsmOperation::asm_pop, rbx);
+                    ___shift--;
+                    ASM.Add(AsmOperation::asm_add, rax, rbx);
+                }
+                shift = rax;
+            }
+        } else if(___shift != 0) {
+            ASM.Add(AsmOperation::asm_pop, rax);
+            ___shift--;
+            while(___shift != 0) {
+                ASM.Add(AsmOperation::asm_pop, rbx);
+                ___shift--;
+                ASM.Add(AsmOperation::asm_add, rax, rbx);
+            }
+            shift = rax;
+        }
 
+        int mov = 0;
+        if(nameLex == "^") {
+            if(ifFunc) {
+                if(symbolStack->get()->findInTable(((ExpressionNode*)children[0])->nameLex) != nullptr) {
+                    mov = symbolStack->get()->movInTable(((ExpressionNode*)children[0])->nameLex);
+                    //-
+                    ASM.Add(AsmOperation::asm_mov, rbx, rbp, AsmSizeof::s_def, false, nullptr, "", AsmSizeof::s_dq, true, shift, "-"+std::to_string(mov*8));
+                    //ASM.Add(AsmOperation::asm_mov, rbx, new AsmInd("rbp-"+std::to_string(mov*8), AsmSizeof::s_dq, true, shift));
+                    ASM.Add(AsmOperation::asm_push, rbx, AsmSizeof::s_dq, true);
+                } else if(symbolStack->get()->parent->findInTable(((ExpressionNode*)children[0])->nameLex) != nullptr) {
+                    mov = symbolStack->get()->parent->movInTable(((ExpressionNode*)children[0])->nameLex);
+                    if(shift != nullptr)
+                        ASM.Add(AsmOperation::asm_imul, shift, new AsmImn("-1"));
+                    ASM.Add(AsmOperation::asm_mov, rbx, rbp, AsmSizeof::s_def, false, nullptr, "", AsmSizeof::s_dq, true, shift, "+"+std::to_string((mov+1)*8));
+                    //ASM.Add(AsmOperation::asm_mov, rbx, new AsmInd("rbp+8+"+std::to_string(mov*8), AsmSizeof::s_dq, true, shift));
+                    ASM.Add(AsmOperation::asm_push, rbx, AsmSizeof::s_dq, true);
+                } else if(baseTable->findInTable(((ExpressionNode*)children[0])->nameLex) != nullptr) {
+                    ASM.Add(AsmOperation::asm_mov, rbx, new AsmInd("v_"+((ExpressionNode*)children[0])->nameLex), AsmSizeof::s_def, false, nullptr, "", AsmSizeof::s_dq, true, shift);
+                    ASM.Add(AsmOperation::asm_push, rbx, AsmSizeof::s_dq, true);
+                }
+            } else {
+                ASM.Add(AsmOperation::asm_mov, rbx, new AsmInd("v_"+((ExpressionNode*)children[0])->nameLex), AsmSizeof::s_def, false, nullptr, "", AsmSizeof::s_dq, true, shift);//dq true
+                ASM.Add(AsmOperation::asm_push, rbx, AsmSizeof::s_dq, true);
+            }
+
+        }
+	    }
+	}
+};
+
+class ActionNode:public TreeNode {
+public:
+	std::string nameLex = "";
+	ActionNode(std::string in) {
+		nameNode = in;
+		nameLex = in;
+	}
+	void print(int l) {
+		std::cout << nameNode;
+	}
+	void generateAsm(bool ifFunc, bool needAsm) {
+	    if(nameLex == "SLEEP") {
+            generateAsmCode(children[0], ifFunc, needAsm, false);
+            ASM.Add(AsmOperation::asm_pop, rcx);
+            ASM.Add(AsmOperation::asm_sub, rsp, new AsmImn("80"));
+            ASM.Add("call Sleep");
+            ASM.Add(AsmOperation::asm_add, rsp, new AsmImn("80"));
+	    } else
+	    if(nameLex == "INITSCR") {
+            //generateAsmCode(children[0], ifFunc, needAsm, false);
+            //asmConstants.Add("hOut", "0");
+            ASM.Add(AsmOperation::asm_mov, rcx, new AsmImn("-11"));
+            ASM.Add("call GetStdHandle");
+            ASM.Add("mov qword [_hOut], rax");
+	    } else
+	    if(nameLex == "GOTOXY") {
+            generateAsmCode(children[1], ifFunc, needAsm, false);
+            generateAsmCode(children[0], ifFunc, needAsm, false);
+            ASM.Add(AsmOperation::asm_pop, rdx);
+            ASM.Add(AsmOperation::asm_shl, rdx, new AsmImn("16"));
+            ASM.Add(AsmOperation::asm_pop, rbx);
+            ASM.Add(AsmOperation::asm_add, rdx, rbx);
+            ASM.Add(AsmOperation::asm_mov, rcx, new AsmInd("_hOut"), AsmSizeof::s_def, false, nullptr, "", AsmSizeof::s_dq, true, nullptr);
+            ASM.Add("call SetConsoleCursorPosition");
+	    } else
+        if(nameLex == "WRITE") {
+            std::string format = "";
+			for(int i = 0; i < children.size(); ++i) {
+                if(children[i]->id == (int)Symbols::sys_string) {
+                    format += ((StringNode*)children[i])->nameLex;
+
+                    ASM.Add(AsmOperation::asm_mov, rcx, new AsmInd("format"+std::to_string(asmFormat.getSize())), AsmSizeof::s_def, false);
+                    asmFormat.Add(format);
+                    ASM.Add(AsmOperation::asm_sub, rsp, new AsmImn("40"));
+                    ASM.Add(AsmOperation::asm_call, new AsmInd("printf", AsmSizeof::s_def, false));
+                    ASM.Add(AsmOperation::asm_add, rsp, new AsmImn("40"));
+                    format = "";
+                    continue;
+                } else {
+                    generateAsmCode(children[i], ifFunc, needAsm, false);
+                    AsmOperand* shift = nullptr;
+                    ASM.Add(AsmOperation::asm_mov, rcx, new AsmInd("format"+std::to_string(asmFormat.getSize())), AsmSizeof::s_def, false);
+
+                    if(((ExpressionNode*)children[i])->convertType->type == DescriptorTypes::scalarInt) {
+                        format += "%d";
+                    } else if(((ExpressionNode*)children[i])->convertType->type == DescriptorTypes::scalarFloat) {
+                        format += "%f";
+                    } else if(((ExpressionNode*)children[i])->convertType->type == DescriptorTypes::scalarBoolean) {
+                        format += "%d";
+                    } else if(((ExpressionNode*)children[i])->convertType->type == DescriptorTypes::scalarChar) {
+                        format += "%c";
+                    } else {
+                        format += "%d";
+                    }
+                    ASM.Add(AsmOperation::asm_pop, rdx);
+                    asmFormat.Add(format);
+                    ASM.Add(AsmOperation::asm_sub, rsp, new AsmImn("40"));
+                    ASM.Add(AsmOperation::asm_call, new AsmInd("printf", AsmSizeof::s_def, false));
+                    ASM.Add(AsmOperation::asm_add, rsp, new AsmImn("40"));
+                    format = "";
+                }
+			}
+        } else if(nameLex == "READ") {
+                std::string format = "";
+                for(int i = 0; i < children.size(); ++i) {
+                    generateAsmCode(children[i], ifFunc, needAsm, true);
+
+                    ASM.Add(AsmOperation::asm_mov, rcx, new AsmInd("format"+std::to_string(asmFormat.getSize())), AsmSizeof::s_def, false);
+                    if(((ExpressionNode*)children[i])->convertType->type == DescriptorTypes::scalarInt) {
+                        format += "%d";
+                    } else if(((ExpressionNode*)children[i])->convertType->type == DescriptorTypes::scalarFloat) {
+                        format += "%lf";
+                    } else if(((ExpressionNode*)children[i])->convertType->type == DescriptorTypes::scalarBoolean) {
+                        format += "%d";
+                    } else if(((ExpressionNode*)children[i])->convertType->type == DescriptorTypes::scalarChar) {
+                        format += "%c";
+                    } else {
+                        format += "%d";
+                    }
+                    ASM.Add(AsmOperation::asm_pop, rdx);
+                    asmFormat.Add(format);
+                    ASM.Add(AsmOperation::asm_sub, rsp, new AsmImn("40"));
+                    ASM.Add(AsmOperation::asm_call, new AsmInd("scanf", AsmSizeof::s_def, false));
+                    ASM.Add(AsmOperation::asm_add, rsp, new AsmImn("40"));
+                    format = "";
+                }
+
+			} else if(nameLex == "BRANCH") {
+                generateAsmCode(children[0], ifFunc, needAsm, false);
+                int _boolOperCounter = boolOperCounter;
+                boolOperCounter++;
+                ASM.Add(AsmOperation::asm_pop, rax);
+                ASM.Add(AsmOperation::asm_cmp, rax, new AsmImn("1"));
+                ASM.Add(AsmOperation::asm_jnz, new AsmMark("IFELSE"+std::to_string(_boolOperCounter), false));
+                generateAsmCode(children[1], ifFunc, needAsm, false);
+                ASM.Add(AsmOperation::asm_jmp, new AsmMark("_IFELSE"+std::to_string(_boolOperCounter), false));
+                ASM.Add("IFELSE"+std::to_string(_boolOperCounter)+":");
+                if(children.size() == 3) {
+                    generateAsmCode(children[2], ifFunc, needAsm, false);
+                }
+                ASM.Add("_IFELSE"+std::to_string(_boolOperCounter)+":");
+			} else if(nameLex == "return") {
+                ASM.Add(AsmOperation::asm_jmp, new AsmMark("RETURN"+std::to_string(stackReturn.size()), false));
+			}
+	}
+	~ActionNode(){}
+};
+
+class BlockActionNode:public ActionNode {
+public:
+	BlockActionNode(std::string in):ActionNode(in) {}
+	~BlockActionNode() {}
+	void generateAsm(bool ifFunc, bool needAsm);
+};
+
+extern bool beginMain;
+class BeginActionNode:public ActionNode {
+public:
+	BeginActionNode(std::string in):ActionNode(in) {}
+	~BeginActionNode() {}
+	void generateAsm(bool ifFunc, bool needAsm);
+};
+
+class AssignActionNode:public ActionNode {
+public:
+	AssignActionNode(std::string in):ActionNode(in) {}
+	~AssignActionNode() {}
+	void generateAsm(bool ifFunc, bool needAsm) {
+
+	}
+};
+
+class IfActionNode:public ActionNode {
+public:
+	IfActionNode(std::string in):ActionNode(in) {}
+	~IfActionNode() {}
+	void generateAsm(bool ifFunc, bool needAsm);
+};
+
+class ElseActionNode:public ActionNode {
+public:
+	ElseActionNode(std::string in):ActionNode(in) {}
+	~ElseActionNode() {}
+	void generateAsm(bool ifFunc, bool needAsm);
+};
+
+class ForActionNode:public ActionNode {
+public:
+	ForActionNode(std::string in):ActionNode(in) {}
+	~ForActionNode() {}
+	void generateAsm(bool ifFunc, bool needAsm);
+};
+
+class WhileActionNode:public ActionNode {
+public:
+	WhileActionNode(std::string in):ActionNode(in) {}
+	~WhileActionNode() {}
+	void generateAsm(bool ifFunc, bool needAsm);
+};
+
+class RepeatActionNode:public ActionNode {
+public:
+	RepeatActionNode(std::string in):ActionNode(in) {}
+	~RepeatActionNode() {}
+    void generateAsm(bool ifFunc, bool needAsm);
+};
+
+class BreakActionNode:public ActionNode {
+public:
+	BreakActionNode(std::string in):ActionNode(in){}
+	~BreakActionNode() {}
+	void generateAsm(bool ifFunc, bool needAsm) {
+        ASM.Add(AsmOperation::asm_jmp, new AsmMark("BREAK"+std::to_string(stackBreak.top()), false));
+	}
+};
+
+class ContinueActionNode:public ActionNode {
+public:
+	ContinueActionNode(std::string in):ActionNode(in) {}
+	~ContinueActionNode() {}
+	void generateAsm(bool ifFunc, bool needAsm) {
+        ASM.Add(AsmOperation::asm_jmp, new AsmMark("CONTINUE"+std::to_string(stackBreak.top()), false));
+	}
+};
+
+class FreeActionNode:public ActionNode {
+public:
+	FreeActionNode(std::string in):ActionNode(in) {}
+	~FreeActionNode() {}
+	void generateAsm(bool ifFunc, bool needAsm) {
+
+	}
+};
+
+class LiteralNode:public ExpressionNode {
+public:
+	Descriptor *type;
+	LiteralNode(std::string _chN, Lexem lex):ExpressionNode(_chN, lex) {}
+	~LiteralNode() {}
+	void generateAsm(bool ifFunc, bool needAsm) {
+	}
+};
+
+
+class CharLiteralNode:public LiteralNode {
+public:
+	CharLiteralNode(std::string _chN, Lexem lex):LiteralNode(_chN, lex) {}
+	~CharLiteralNode() {}
+	void generateAsm(bool ifFunc, bool needAsm) {
+        ASM.Add(AsmOperation::asm_push, new AsmImn(std::to_string(nameLex[1])));
 	}
 };
 
 class VarNode:public ExpressionNode {
 public:
 	Symbol *type;
+	bool ifRead = false;
 	VarNode(std::string _chN, Lexem lex):ExpressionNode(_chN, lex) {
 		typeForPrint = 2;
 	}
-	void generateAsm() {
+    void func(TreeNode* node, bool ifFunc, bool needAsm, bool ifRead);
+	void generateAsmIdent(bool ifFunc, bool needAsm, bool ifRead = false);
+
+	AsmOperand*  generateAsmFactor(bool ifFunc, bool needAsm, bool ifRead = false, bool atOrArror = false);
+
+	void generateAsm(bool ifFunc, bool needAsm) {
 	}
 
 	~VarNode() {}
@@ -559,8 +755,11 @@ public:
 	~ProgramNode() {
 		//delete type;
 	}
-	void generateAsm() {
-
+	void generateAsm(bool ifFunc, bool needAsm) {
+	    //if(!ifFunc)
+        ASMOther.Add("section", ".data");
+	    generateVars(type->localParam, false);
+        generateAsmCode(children[0], ifFunc, needAsm, false);
 	}
 };
 
@@ -579,8 +778,42 @@ public:
 	void print(int l);
 	~ProcNode() {
 	}
-	void generateAsm(AsmProgram *ASM, bool rOrl) {
+	void generateAsm(bool ifFunc, bool needAsm) {
+	    //local
+	    //input
+	    symbolStack->push(mainTable);
+	    symbolStack->push(type->inputParam);
+	    symbolStack->push(type->localParam);
 
+        stackReturn.push(stackReturn.size()+1);
+        sizeReturns++;
+
+        ASMOther.Add("section", ".text");
+		ASM.Add(type->lex.lexem+":");
+		ASM.Add("push rbp");
+		ASM.Add("mov rbp, rsp");
+	    generateVars(type->localParam, true);
+
+		generateAsmCode(type->block, true, needAsm, false);
+
+        ASM.Add("RETURN"+std::to_string(sizeReturns)+":");
+
+		int _add = 0;
+		for(int i = 0; i < type->localParam->symbolsvec.size(); ++i) {
+            _add += 8;
+            //ASM.Add(AsmOperation::asm_pop, rbx);
+		}
+		ASM.Add(AsmOperation::asm_add, rsp, new AsmImn(std::to_string(_add)));
+
+        ASM.Add("mov rsp, rbp");
+        ASM.Add("pop rbp");
+		ASM.Add("ret");
+
+		stackReturn.pop();
+
+		symbolStack->pop();
+		symbolStack->pop();
+		symbolStack->pop();
 	}
 };
 
@@ -599,173 +832,65 @@ public:
 	void print(int l);
 	~FuncNode() {
 	}
-    void generateAsm(AsmProgram *ASM, bool rOrl) {
+    void generateAsm(bool ifFunc, bool needAsm) {
+        symbolStack->push(mainTable);
+        symbolStack->push(type->inputParam);
+        symbolStack->push(type->localParam);
 
+        stackReturn.push(stackReturn.size()+1);
+        sizeReturns++;
+
+
+        ASMOther.Add("section", ".text");
+		ASM.Add(type->lex.lexem+":");
+		ASM.Add("push rbp");
+		ASM.Add("mov rbp, rsp");
+        generateVars(type->localParam, true);
+		generateAsmCode(type->block, true, needAsm, false);
+
+
+		ASM.Add("RETURN"+std::to_string(sizeReturns)+":");
+
+		int _add = 0;
+		for(int i = 0; i < type->localParam->symbolsvec.size(); ++i) {
+            _add += 8;
+            //ASM.Add(AsmOperation::asm_pop, rbx);
+		}
+		ASM.Add(AsmOperation::asm_add, rsp, new AsmImn(std::to_string(_add)));
+        ASM.Add("mov rsp, rbp");
+        ASM.Add("pop rbp");
+		ASM.Add("ret");
+
+        stackReturn.pop();
+
+		symbolStack->pop();
+		symbolStack->pop();
+		symbolStack->pop();
 	}
 };
 
 class BinOperationNode:public ExpressionNode {
 public:
+    AsmOperand* shiftFor = nullptr;
 	BinOperationNode(std::string _chN, Lexem lex):ExpressionNode(_chN, lex) {}
 	~BinOperationNode() {}
-	void generateAsm() {
-        if(convertType->type == DescriptorTypes::scalarInt) {
-
-            if(id == (int)Symbols::sys_div || id == (int)Symbols::sys_mod) {
-                ASM.Add(AsmOperation::asm_pop, rax);
-                ASM.Add(AsmOperation::asm_pop, rbx);
-                ASM.Add(AsmOperation::asm_mov, r8, rax);
-                ASM.Add(AsmOperation::asm_mov, rax, rbx);
-                ASM.Add(AsmOperation::asm_xor, rdx, rdx);
-                ASM.Add(AsmOperation::asm_idiv, r8);
-                if(id == (int)Symbols::sys_div) {
-                    ASM.Add(AsmOperation::asm_push, rax);
-                } else {
-                    ASM.Add(AsmOperation::asm_push, rdx);
-                }
-            } else {
-                ASM.Add(AsmOperation::asm_pop, rbx);
-                ASM.Add(AsmOperation::asm_pop, rax);
-                if(id == (int)Symbols::sys_shl || id == (int)Symbols::sys_shr) {
-                    ASM.Add(AsmOperation::asm_mov, rcx, rbx);
-                    ASM.Add(getAsmOper(id, 0), rax, new AsmImn("cl"));
-
-                } else {
-                    ASM.Add(getAsmOper(id, 0), rax, rbx);
-                }
-                ASM.Add(AsmOperation::asm_push, rax);
-            }
-		}
-		if(convertType->type == DescriptorTypes::scalarFloat) {
-            ASM.Add(AsmOperation::asm_pop, rbx);
-            if(((ExpressionNode*)children[1])->convertType->type == DescriptorTypes::scalarInt) {
-                ASM.Add(AsmOperation::asm_cvtsi2sd, xmm1, rbx);
-            } else {
-                ASM.Add(AsmOperation::asm_movq, xmm1, rbx);
-            }
-            ASM.Add(AsmOperation::asm_pop, rax);
-            if(((ExpressionNode*)children[0])->convertType->type == DescriptorTypes::scalarInt) {
-                ASM.Add(AsmOperation::asm_cvtsi2sd, xmm0, rax);
-            } else {
-                ASM.Add(AsmOperation::asm_movq, xmm0, rax);
-            }
-            ASM.Add(getAsmOper(id, 1), xmm0, xmm1);
-            //asmConstants.Add("8");
-            //ASM.Add(AsmOperation::asm_sub, rsp, new AsmInd("_8", AsmSizeof::s_dq, true));
-            ASM.Add(AsmOperation::asm_sub, rsp, new AsmImn("8"));
-            ASM.Add(AsmOperation::asm_movq, rsp, xmm0, AsmSizeof::s_dq, true);
-		}
-		if(convertType->type == DescriptorTypes::scalarBoolean) {
-            if(id == (int)Symbols::sys_and) {
-                ASM.Add(AsmOperation::asm_pop, rbx);
-                ASM.Add(AsmOperation::asm_pop, rax);
-                ASM.Add(AsmOperation::asm_test, rax, rax);
-                ASM.Add(AsmOperation::asm_jz, new AsmMark("CMP"+std::to_string(boolOperCounter), false));
-                ASM.Add(AsmOperation::asm_push, rbx);
-                ASM.Add(AsmOperation::asm_jmp, new AsmMark("_CMP"+std::to_string(boolOperCounter), false));
-                ASM.Add("CMP"+std::to_string(boolOperCounter)+":");
-                //asmConstants.Add("0");
-                //ASM.Add(AsmOperation::asm_push, new AsmInd("_0", AsmSizeof::s_dq, true));
-                ASM.Add(AsmOperation::asm_push, new AsmImn("0"));
-                ASM.Add("_CMP"+std::to_string(boolOperCounter)+":");
-                boolOperCounter++;
-            } else if(id == (int)Symbols::sys_or) {
-                ASM.Add(AsmOperation::asm_pop, rbx);
-                ASM.Add(AsmOperation::asm_pop, rax);
-                ASM.Add(AsmOperation::asm_test, rax, rax);
-                ASM.Add(AsmOperation::asm_jnz, new AsmMark("CMP"+std::to_string(boolOperCounter), false));
-                ASM.Add(AsmOperation::asm_push, rbx);
-                ASM.Add(AsmOperation::asm_jmp, new AsmMark("_CMP"+std::to_string(boolOperCounter), false));
-                ASM.Add("CMP"+std::to_string(boolOperCounter)+":");
-                //asmConstants.Add("1");
-                //ASM.Add(AsmOperation::asm_push, new AsmInd("_1", AsmSizeof::s_dq, true));
-                ASM.Add(AsmOperation::asm_push, new AsmImn("1"));
-                ASM.Add("_CMP"+std::to_string(boolOperCounter)+":");
-                boolOperCounter++;
-            } else if(id == (int)Symbols::sys_xor) {
-                ASM.Add(AsmOperation::asm_pop, rbx);
-                ASM.Add(AsmOperation::asm_pop, rax);
-                ASM.Add(AsmOperation::asm_xor, rax, rbx);
-                ASM.Add(AsmOperation::asm_push, rax);
-            } else {
-                ASM.Add(AsmOperation::asm_pop, rbx);
-                ASM.Add(AsmOperation::asm_pop, rax);
-                ASM.Add(AsmOperation::asm_cmp, rax, rbx);
-                ASM.Add(getAsmOper(id, 0), new AsmMark("CMP"+std::to_string(boolOperCounter), false));
-                //asmConstants.Add("0");
-                //ASM.Add(AsmOperation::asm_push, new AsmInd("_0", AsmSizeof::s_dq, true));
-                ASM.Add(AsmOperation::asm_push, new AsmImn("0"));
-
-                ASM.Add(AsmOperation::asm_jmp, new AsmMark("_CMP"+std::to_string(boolOperCounter), false));
-                ASM.Add("CMP"+std::to_string(boolOperCounter)+":");
-                //asmConstants.Add("1");
-                //ASM.Add(AsmOperation::asm_push, new AsmInd("_1", AsmSizeof::s_dq, true));
-                ASM.Add(AsmOperation::asm_push, new AsmImn("1"));
-                ASM.Add("_CMP"+std::to_string(boolOperCounter)+":");
-                boolOperCounter++;
-            }
-		}
-	}
+	void generateAsm(bool ifFunc, bool needAsm);
 };
 
 class UnarOperationNode:public ExpressionNode {
 public:
 	UnarOperationNode(std::string _chN, Lexem lex):ExpressionNode(_chN, lex) {}
 	~UnarOperationNode() {}
-	void generateAsm() {
-	    if(convertType->type == DescriptorTypes::scalarBoolean) {
-            ASM.Add(AsmOperation::asm_pop, rbx);
-            ASM.Add(getAsmOper(id,0), rbx);
-            ASM.Add(AsmOperation::asm_push, rbx);
-
-		}
-        if(convertType->type == DescriptorTypes::scalarInt) {
-            ASM.Add(AsmOperation::asm_xor, rax, rax);
-            ASM.Add(AsmOperation::asm_pop, rbx);
-            if(getAsmOper(id,0) == AsmOperation::asm_not) {
-                ASM.Add(getAsmOper(id,0), rbx);
-                ASM.Add(AsmOperation::asm_push, rbx);
-            } else {
-                ASM.Add(getAsmOper(id,0), rax, rbx);
-                ASM.Add(AsmOperation::asm_push, rax);
-            }
-		}
-		if(convertType->type == DescriptorTypes::scalarFloat) {
-            ASM.Add(AsmOperation::asm_pop, rbx);
-            if(convertType->type == DescriptorTypes::scalarInt) {
-                ASM.Add(AsmOperation::asm_cvtsi2sd, xmm1, rbx);
-            } else {
-                ASM.Add(AsmOperation::asm_movq, xmm1, rbx);
-            }
-            ASM.Add(AsmOperation::asm_xor, rax, rax);
-            ASM.Add(AsmOperation::asm_cvtsi2sd, xmm0, rax);
-
-            ASM.Add(getAsmOper(id, 1), xmm0, xmm1);
-            //asmConstants.Add("8");
-            //ASM.Add(AsmOperation::asm_sub, rsp, new AsmInd("_8", AsmSizeof::s_dq, true));
-            ASM.Add(AsmOperation::asm_sub, rsp, new AsmImn("8"));
-            ASM.Add(AsmOperation::asm_movq, rsp, xmm0, AsmSizeof::s_dq, true);
-		}
-
-	}
-};
-
-class LiteralNode:public ExpressionNode {
-public:
-	Descriptor *type;
-	LiteralNode(std::string _chN, Lexem lex):ExpressionNode(_chN, lex) {}
-	~LiteralNode() {}
-	void generateAsm() {
-
-	}
+	void generateAsm(bool ifFunc, bool needAsm);
 };
 
 class BoolLiteralNode:public LiteralNode {
 public:
 	BoolLiteralNode(std::string _chN, Lexem lex):LiteralNode(_chN, lex) {}
 	~BoolLiteralNode() {}
-	void generateAsm() {
-
+	void generateAsm(bool ifFunc, bool needAsm) {
+        asmConstants.Add(nameLex);
+        ASM.Add(AsmOperation::asm_push, new AsmInd(asmConstants.Find(nameLex)), AsmSizeof::s_dq, true);
 	}
 };
 
@@ -773,7 +898,7 @@ class IntLiteralNode:public LiteralNode {
 public:
 	IntLiteralNode(std::string _chN, Lexem lex):LiteralNode(_chN, lex) {}
 	~IntLiteralNode() {}
-	void generateAsm() {
+	void generateAsm(bool ifFunc, bool needAsm) {
         ASM.Add(AsmOperation::asm_push, new AsmImn(nameLex));
 	}
 };
@@ -781,26 +906,28 @@ public:
 class FloatLiteralNode:public LiteralNode {
 public:
 	FloatLiteralNode(std::string _chN, Lexem lex):LiteralNode(_chN, lex){}
-	void generateAsm() {
-        asmConstants.Add(nameLex);
-        ASM.Add(AsmOperation::asm_push, new AsmInd(asmConstants.Find(nameLex), AsmSizeof::s_dq, true));
+	void generateAsm(bool ifFunc, bool needAsm) {
+	    std::string _nameLex = nameLex;
+	    std::size_t found = nameLex.find("+");
+        if (found!=std::string::npos) {
+            _nameLex.replace(found, 1, "p");
+        }
+        found = nameLex.find("-");
+        if (found!=std::string::npos) {
+            _nameLex.replace(found, 1, "p");
+        }
+        asmConstants.Add(_nameLex, nameLex);
+        ASM.Add(AsmOperation::asm_push, new AsmInd(asmConstants.Find(nameLex)), AsmSizeof::s_dq, true);
 	}
 };
 
-class CharLiteralNode:public LiteralNode {
-public:
-	CharLiteralNode(std::string _chN, Lexem lex):LiteralNode(_chN, lex) {}
-	~CharLiteralNode() {}
-	void generateAsm() {
-        ASM.Add(AsmOperation::asm_push, new AsmImn(std::to_string(nameLex[1])));
-	}
-};
+
 
 class RecordLiteralNode:public LiteralNode {
 public:
 	RecordLiteralNode(std::string _chN, Lexem lex):LiteralNode(_chN, lex){}
 	~RecordLiteralNode() {}
-	void generateAsm() {
+	void generateAsm(bool ifFunc, bool needAsm) {
 
 	}
 };
@@ -808,16 +935,16 @@ public:
 Descriptor *castSecontToFirst(Descriptor *d1, Descriptor *d2);
 Descriptor *cast(Descriptor *d1, Descriptor *d2);
 
+
+
 class Parser {
 public:
-
-	SymbolStack *Stack;
-	SymbolStack *symbolStack;
 	Error error;
 	Parser(std::string _filePath);
 	~Parser();
 	void Parse();
 	void print();
+	void optimization();
 	void printAsm() {
         ASMOther.print();
         ASM.print();
@@ -825,14 +952,8 @@ public:
         asmConstants.print();
 	}
 private:
-    int mot = 0;//-1 var; 1 val; 0 def;
-
-    void genAsmCodeForIdentFunc(ExpressionNode *ident, ExpressionNode *expr, AsmOperand* shift);
-    void genAsmCodeForIdent(ExpressionNode *ident, ExpressionNode *expr, AsmOperand* shift);
 
     ExpressionNode *Calculate(ExpressionNode * expr);
-
-    SymbolTable *baseTable = nullptr;
 
 	Scanner scanner;
 	ProgramNode *root = nullptr;
@@ -863,50 +984,6 @@ private:
 	ExpressionNode *getOrd(bool ifFunc, bool needAsm);
 	ExpressionNode *getChr(bool ifFunc, bool needAsm);
 
-	int pushFuncParam(bool ifFunc, std::string name, Descriptor *descr, int _mov = 0) {
-	    int mov = 0;
-        AsmImn* shift = nullptr;
-        int popSz = 0;
-
-	    if(descr->type != DescriptorTypes::arrays &&
-            descr->type != DescriptorTypes::records) {
-                popSz++;
-                if(!ifFunc) {
-                    shift = new AsmImn(std::to_string(_mov));
-                    ASM.Add(AsmOperation::asm_push, new AsmInd("v_"+name, AsmSizeof::s_dq, true, shift));
-                } else {
-                    if(symbolStack->get()->findInTable(name) != nullptr) {
-                        mov = symbolStack->get()->movInTable(name);
-                        ASM.Add(AsmOperation::asm_mov, rbx, new AsmInd("rbp-"+std::to_string((mov+1+_mov)*8), AsmSizeof::s_def, true));
-                    } else if(symbolStack->get()->parent->findInTable(name) != nullptr) {
-                        mov = symbolStack->get()->parent->movInTable(name);
-                        ASM.Add(AsmOperation::asm_mov, rbx, new AsmInd("rbp+8+"+std::to_string(mov+1+_mov*8), AsmSizeof::s_def, true));
-                    } else if(baseTable->findInTable(name) != nullptr) {
-                        shift = new AsmImn(std::to_string(_mov));
-                        ASM.Add(AsmOperation::asm_push, new AsmInd("v_"+name, AsmSizeof::s_dq, true, shift));
-                    }
-                    ASM.Add(AsmOperation::asm_push, rbx);
-                }
-        } else if(descr->type == DescriptorTypes::arrays) {
-            DescriptorArray* darr = (DescriptorArray*)(descr);
-            for(int i = 0; i < darr->indices.size(); ++i) {
-                int _max = std::stoi(((ExpressionNode*)(((DescriptorLimited*)(darr->indices[i]))->_max))->nameLex);
-                int _min = std::stoi(((ExpressionNode*)(((DescriptorLimited*)(darr->indices[i]))->_min))->nameLex);
-                for(int j = 0; j < _max - _min+1; ++j) {
-                    popSz += pushFuncParam(ifFunc, name, darr->baseType, j*(std::stoi(getSize("", darr->baseType))));
-                }
-            }
-        } else if(descr->type == DescriptorTypes::records) {
-            DescriptorRecord* drec = (DescriptorRecord*)(descr);
-            int movInRec=0;
-            for(int i = 0; i < drec->rName.size(); ++i) {
-                popSz += pushFuncParam(ifFunc, name, drec->rName[i]->type, _mov+movInRec);
-                movInRec += (std::stoi(getSize("", drec->rName[i]->type)));
-            }
-
-        }
-        return popSz;
-	}
 };
 
 #endif // PARSER_H_INCLUDED

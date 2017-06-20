@@ -79,7 +79,8 @@ void DescriptorArray::print(int l) {
             std::cout << "     ";
         }
         std::cout << "index" << i << " ";
-        indices[i]->print(l);
+        if(!isOpen)
+            indices[i]->print(l);
         std::cout << "\n";
     }
     for(int j = 0; j < l; ++j) {
@@ -97,13 +98,15 @@ void DescriptorLimited::print(int l) {
         std::cout << "     ";
     }
     std::cout << "min : ";
-    printTree(_min, 0, 0);
+    if(_min != nullptr)
+        printTree(_min, 0, 0);
     std::cout << "\n";
     for(int j = 0; j < l; ++j) {
         std::cout << "     ";
     }
     std::cout << "max : ";
-    printTree(_max, 0, 0);
+    if(_max != nullptr)
+        printTree(_max, 0, 0);
     std::cout << "\n";
     for(int j = 0; j < l; ++j) {
         std::cout << "     ";

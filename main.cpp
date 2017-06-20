@@ -12,6 +12,7 @@ int main(int argc, char* argv[])
     SetConsoleCP(866);
     SetConsoleOutputCP(866);
 
+	/*
 	std::string path = "C:\\Users\\333da\\Desktop\\in\\";
 	for(int i = 0; i < 100; ++i) {
         std::string s;
@@ -20,7 +21,7 @@ int main(int argc, char* argv[])
         else
             s = path + "0" + std::to_string(i) + ".pas.out";
 		std::ofstream infile (s);
-	}
+	}*/
 
 	string key;
 	string filename;
@@ -47,6 +48,11 @@ int main(int argc, char* argv[])
 			filename = argv[i];
 			break;
 		}
+		if(key == "-ao" || key == "-asmo") {
+			i++;
+			filename = argv[i];
+			break;
+		}
 	}
 	if(key == "-l" || key == "-lexer") {
 		Scanner scanner(filename);
@@ -60,10 +66,23 @@ int main(int argc, char* argv[])
 		Parser parser(filename);
 		parser.Parse();
 		parser.printAsm();
-	} else {
-		Parser parser("0.txt");
+	} else if(key == "-ao" || key == "-asmo") {
+		Parser parser(filename);
 		parser.Parse();
-		parser.print();
+		parser.optimization();
+		parser.printAsm();
+	} else {
+	    //Scanner scanner("0.txt");
+		//scanner.read();
+		//scanner.printLexems();
+		//Parser parser("0.txt");
+		Parser parser("snake_.pas");
+		//Parser parser("2048.pas");
+		parser.Parse();
+		//parser.print();
+		//parser.printAsm();
+		parser.optimization();
+		//std::cout << "!!!!!!!!!!!!optimization!!!!!!!!!!!!\n";
 		parser.printAsm();
 	}
 

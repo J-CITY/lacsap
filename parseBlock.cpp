@@ -1,5 +1,5 @@
 #include "parser.h"
-std::vector<int> popLimPos;
+//std::vector<int> popLimPos;
 
 Descriptor *Parser::getArrLimit() {
     ExpressionNode *from = expression(false, false);
@@ -9,7 +9,7 @@ Descriptor *Parser::getArrLimit() {
     ExpressionNode *to = expression(false, false);
     to = Calculate(to);
 
-    popLimPos.push_back(ASM.asmcode.size());
+    //popLimPos.push_back(ASM.asmcode.size());
 
     if(((VarNode*)from)->convertType->type != DescriptorTypes::scalarInt ||
         ((VarNode*)to)->convertType->type != DescriptorTypes::scalarInt) {
@@ -21,28 +21,6 @@ Descriptor *Parser::getArrLimit() {
     lim->_max = to;
     lim->baseType = ((VarNode*)from)->convertType;
     return lim;
-}
-
-std::string genAsmDerective(Descriptor *type) {
-    switch(type->type) {
-    case DescriptorTypes::scalarInt:
-        return "dq";
-    case DescriptorTypes::scalarFloat:
-        return "dq";
-    case DescriptorTypes::scalarChar:
-        return "dq";
-    case DescriptorTypes::scalarBoolean:
-        return "dq";
-    case DescriptorTypes::pointer:
-        return genAsmDerective(((DescriptorPointers*)type)->baseType);
-    case DescriptorTypes::records:
-        return "dq";
-    case DescriptorTypes::arrays:
-        return genAsmDerective(((DescriptorArray*)type)->baseType);
-    default:
-        break;
-    }
-    return "";
 }
 
 std::vector<SymbolVar*> Parser::getVarBlock(int ifFunc, SymbolTable *st, bool forFunc, bool ifRecord = false) {
@@ -83,6 +61,9 @@ std::vector<SymbolVar*> Parser::getVarBlock(int ifFunc, SymbolTable *st, bool fo
 		result[result.size()-1]->lex = idents[i];
         result[result.size()-1]->type = descr;
 		result[result.size()-1]->mot = mot;
+		if(result[result.size()-1]->type->type == DescriptorTypes::arrays && ((DescriptorArray*)result[result.size()-1]->type)->isOpen) {
+            result[result.size()-1]->mot = MethodOfTransmission::paramvar;
+		}
 	}
 	//array of array to double array
 	while(true) {
@@ -101,37 +82,36 @@ std::vector<SymbolVar*> Parser::getVarBlock(int ifFunc, SymbolTable *st, bool fo
         }
 	}
 
-	if(ifFunc > 0) {
-        int _sz = std::stoi(getSize("", result[0]->type));
-        int stackSub = 0;
-        for(int i = 0; i < result.size(); ++i) {
-            if(result[i]->mot == MethodOfTransmission::paramvar) {
-                    stackSub += 8;
-            ASM.Add(AsmOperation::asm_push, new AsmInd("0", AsmSizeof::s_def, false));
-            } else {
-                for(int j = 0; j < _sz; ++j) {
-                    stackSub += 8;
-                    ASM.Add(AsmOperation::asm_push, new AsmInd("0", AsmSizeof::s_def, false));
-                }
-            }
-        }
-        //ASM.Add(AsmOperation::asm_sub, rsp, new AsmImn(std::to_string(stackSub)));
-	}
+	///if(ifFunc > 0) {
+    ///    int _sz = std::stoi(getSize("", result[0]->type));
+    ///    int stackSub = 0;
+    ///    for(int i = 0; i < result.size(); ++i) {
+    ///        if(result[i]->mot == MethodOfTransmission::paramvar) {
+    ///                stackSub += 8;
+    ///        ASM.Add(AsmOperation::asm_push, new AsmInd("0", AsmSizeof::s_def, false));
+    ///        } else {
+    ///            for(int j = 0; j < _sz; ++j) {
+    ///                stackSub += 8;
+    ///                ASM.Add(AsmOperation::asm_push, new AsmInd("0", AsmSizeof::s_def, false));
+    ///            }
+    ///        }
+    ///    }
+    ///}
 
-	if(!ifRecord && !ifFunc)
-	for(unsigned int i = 0; i < idents.size(); ++i) {
-		std::string _t = genAsmDerective(descr);
-		if(descr->type == DescriptorTypes::arrays && !((DescriptorArray*)descr)->isOpen) {
-            _t = "v_" + idents[i].lexem + ": " + " times " + getSize(result[i]->lex.lexem, descr) +" "+ _t + " " + "0";
-            ASMOther.Add(_t);
-        } else if(descr->type == DescriptorTypes::records) {
-            _t = "v_" + idents[i].lexem + ": " + " times " + getSize(result[i]->lex.lexem, descr) +" "+ _t + " " + "0";
-            ASMOther.Add(_t);
-        } else {
-            _t = "v_" + idents[i].lexem + ": " + _t + " " + "0";
-            ASMOther.Add(_t);
-        }
-	}
+	///if(!ifRecord && !ifFunc)
+	///for(unsigned int i = 0; i < idents.size(); ++i) {
+	///	std::string _t = genAsmDerective(descr);
+	///	if(descr->type == DescriptorTypes::arrays && !((DescriptorArray*)descr)->isOpen) {
+    ///        _t = "v_" + idents[i].lexem + ": " + " times " + getSize(result[i]->lex.lexem, descr) +" "+ _t + " " + "0";
+    ///        ASMOther.Add(_t);
+    ///    } else if(descr->type == DescriptorTypes::records) {
+    ///        _t = "v_" + idents[i].lexem + ": " + " times " + getSize(result[i]->lex.lexem, descr) +" "+ _t + " " + "0";
+    ///        ASMOther.Add(_t);
+    ///    } else {
+    ///        _t = "v_" + idents[i].lexem + ": " + _t + " " + "0";
+    ///        ASMOther.Add(_t);
+    ///    }
+	///}
 
 	return result;
 }
@@ -146,6 +126,8 @@ std::string getSize(std::string name="", Descriptor* descr=nullptr) {
        }
     if(descr->type == DescriptorTypes::arrays) {
         DescriptorArray* darr = ((DescriptorArray*)descr);
+        if(darr->isOpen)
+            return "1";
         int _timesint = 1;
         for(int j = darr->indices.size()-1; j >= 0 ; --j) {
             int a = std::stoi(((ExpressionNode*)((DescriptorLimited*)darr->indices[j])->_max)->nameLex);
@@ -201,7 +183,7 @@ Descriptor *Parser::getType(SymbolTable *st, bool forFunc = false) {
 		}
         expect(Symbols::sys_of);
         scanner.getNextLexem();
-        arr->baseType = getType(st);
+        arr->baseType = getType(st, forFunc);
         return arr;
     } else if(accept(Symbols::ident)) {
         Symbol *typeSymbol = symbolStack->findInTables(scanner.getLexem().lexem);
@@ -305,8 +287,7 @@ TreeNode *Parser::block(bool ifFunc, SymbolTable *st) {
 		continue;
 	}
 	if (accept(Symbols::sys_var)) {
-        if(!ifFunc)
-            ASMOther.Add("section", ".data");
+
 		scanner.getNextLexem();
 		do {
 			std::vector<SymbolVar*> r = getVarBlock(ifFunc, st, false);
@@ -350,15 +331,15 @@ TreeNode *Parser::block(bool ifFunc, SymbolTable *st) {
 			func->lex = scanner.getLexem();
 			scanner.getNextLexem();
 		}
-        ASMOther.Add("section", ".text");
-		ASM.Add(func->lex.lexem+":");
-
-		ASM.Add("push rbp");
-		ASM.Add("mov rbp, rsp");
+        ///ASMOther.Add("section", ".text");
+		///ASM.Add(func->lex.lexem+":");
+		///ASM.Add("push rbp");
+		///ASM.Add("mov rbp, rsp");
 
 		st->add(func);
 		expect(Symbols::lpar);
         scanner.getNextLexem();
+        if(!accept(Symbols::rpar))
 		do {
  			std::vector<SymbolVar*> r = getVarBlock(-1, st,  true);
 			for(unsigned int i = 0; i < r.size(); ++i) {
@@ -366,6 +347,22 @@ TreeNode *Parser::block(bool ifFunc, SymbolTable *st) {
 					error.printError(Errors::ERROR_VAR_ALREADY_EXIST, scanner.getLexem().pos, "");
 				}
 				func->inputParam->add(r[i]);
+				if(r[i]->type->type == DescriptorTypes::arrays) {
+                    if(((DescriptorArray*)r[i]->type)->isOpen) {
+                        for(int y = 0; y < ((DescriptorArray*)r[i]->type)->indices.size(); y++) {
+                            SymbolVar *svar = new SymbolVar();
+                            TextPos pos;
+                            Lexem _lex((std::string)(r[i]->lex.lexem+"size"+std::to_string(y)),
+                                          (TextPos)pos, (int)Symbols::intc, (int)literalint);
+
+                            svar->lex = _lex;
+                            svar->mot = MethodOfTransmission::paramval;
+                            svar->_class = SymbolTypes::vars;
+                            svar->type = baseTable->findInTable("integer")->type;
+                            func->inputParam->add(svar);
+                        }
+                    }
+                }
 			}
 			if(accept(Symbols::semicolon)) {
 				scanner.getNextLexem();
@@ -415,12 +412,12 @@ TreeNode *Parser::block(bool ifFunc, SymbolTable *st) {
 		blockNode->children.push_back(funcNode);
 		symbolStack->pop();
 
-		for(int i = 0; i < func->localParam->symbolsvec.size(); ++i) {
-            ASM.Add(AsmOperation::asm_pop, rbx);
-		}
-        ASM.Add("mov rsp, rbp");
-        ASM.Add("pop rbp");
-		ASM.Add("ret");
+		///for(int i = 0; i < func->localParam->symbolsvec.size(); ++i) {
+        ///    ASM.Add(AsmOperation::asm_pop, rbx);
+		///}
+        ///ASM.Add("mov rsp, rbp");
+        ///ASM.Add("pop rbp");
+		///ASM.Add("ret");
 		continue;
 	 }
 	 if(accept(Symbols::sys_procedure)) {
@@ -435,15 +432,15 @@ TreeNode *Parser::block(bool ifFunc, SymbolTable *st) {
 			 proc->type = nullptr;
 			 scanner.getNextLexem();
 		}
-        ASMOther.Add("section", ".text");
-		ASM.Add(proc->lex.lexem+":");
-
-		ASM.Add("push rbp");
-		ASM.Add("mov rbp, rsp");
+        ///ASMOther.Add("section", ".text");
+		///ASM.Add(proc->lex.lexem+":");
+		///ASM.Add("push rbp");
+		///ASM.Add("mov rbp, rsp");
 
 		st->add(proc);
 		expect(Symbols::lpar);
         scanner.getNextLexem();
+        if(!accept(Symbols::rpar))
         do {
             std::vector<SymbolVar*> r = getVarBlock(ifFunc, st, true);
             for(unsigned int i = 0; i < r.size(); ++i) {
@@ -451,6 +448,23 @@ TreeNode *Parser::block(bool ifFunc, SymbolTable *st) {
                     error.printError(Errors::ERROR_VAR_ALREADY_EXIST, scanner.getLexem().pos, "");
                 }
                 proc->inputParam->add(r[i]);
+                if(r[i]->type->type == DescriptorTypes::arrays) {
+                    if(((DescriptorArray*)r[i]->type)->isOpen) {
+                        //std::cout << "!!!!!!\n";
+                        for(int y = 0; y < ((DescriptorArray*)r[i]->type)->indices.size(); y++) {
+                            SymbolVar *svar = new SymbolVar();
+                            TextPos pos;
+                            Lexem _lex((std::string)(r[i]->lex.lexem+"size"+std::to_string(y)),
+                                          (TextPos)pos, (int)Symbols::intc, (int)literalint);
+
+                            svar->lex = _lex;
+                            svar->mot = MethodOfTransmission::paramval;
+                            svar->_class = SymbolTypes::vars;
+                            svar->type = baseTable->findInTable("integer")->type;
+                            proc->inputParam->add(svar);
+                        }
+                    }
+                }
             }
             if(accept(Symbols::semicolon)) {
                 scanner.getNextLexem();
@@ -459,39 +473,42 @@ TreeNode *Parser::block(bool ifFunc, SymbolTable *st) {
                 }
             }
         } while(accept(Symbols::ident) || accept(Symbols::sys_var));
+
         expect(Symbols::rpar);
         scanner.getNextLexem();
         expect(Symbols::semicolon);
         scanner.getNextLexem();
         symbolStack->push(proc->inputParam);
 
+
         SymbolTable *st = new SymbolTable();
         proc->block = block(true, st);
         proc->localParam = st;
         expect(Symbols::semicolon);
-        scanner.getNextLexem();
         procNode->type = proc;
+        scanner.getNextLexem();
         blockNode->children.push_back(procNode);
         symbolStack->pop();
-        for(int i = 0; i < proc->localParam->symbolsvec.size(); ++i) {
-            ASM.Add(AsmOperation::asm_pop, rbx);
-		}
-        ASM.Add("mov rsp, rbp");
-        ASM.Add("pop rbp");
-        ASM.Add("ret");
+
+        ///for(int i = 0; i < proc->localParam->symbolsvec.size(); ++i) {
+        ///    ASM.Add(AsmOperation::asm_pop, rbx);
+		///}
+        ///ASM.Add("mov rsp, rbp");
+        ///ASM.Add("pop rbp");
+        ///ASM.Add("ret");
         continue;
     }
     break;
 	}
-	if(!ifFunc) {
-        ASM.Add("section", ".text");
-        ASM.Add("global", "CMAIN");
-        ASM.Add("mark", "CMAIN");
-	}
+	///if(!ifFunc) {
+    ///    ASM.Add("section", ".text");
+    ///    ASM.Add("global", "CMAIN");
+    ///    ASM.Add("mark", "CMAIN");
+	///}
 	blockNode->children.push_back(statement(ifFunc));
 	symbolStack->pop();
-	if(!ifFunc) {
-        ASM.Add(AsmOperation::asm_ret);
-	}
+	///if(!ifFunc) {
+    ///    ASM.Add(AsmOperation::asm_ret);
+	///}
 	return blockNode;
  }

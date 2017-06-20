@@ -83,7 +83,8 @@ enum class Symbols {
 	sys_var      ,
 	sys_while    ,
 	sys_with     ,
-	sys_xor
+	sys_xor      ,
+	sys_return
 };
 
 const int identifier  = 4000;

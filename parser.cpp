@@ -21,6 +21,16 @@ int ___shift = 0;
 AsmProgram ASM;
 AsmProgram ASMOther;
 std::stack<int> stackBreak;
+std::stack<int> stackReturn;
+int intGetch = 0;
+bool beginMain = false;
+
+int mot = 0;
+SymbolTable *baseTable = nullptr;
+SymbolTable *mainTable = nullptr;
+SymbolStack *Stack = nullptr;
+SymbolStack *symbolStack = nullptr;
+int sizeReturns = 0;
 
 Parser::Parser(std::string _filePath) {
 	scanner.open(_filePath);
@@ -30,6 +40,7 @@ Parser::Parser(std::string _filePath) {
 
 void Parser::Parse() {
 	program();
+	boolOperCounter = 0;
 }
 
 void Parser::program() {
@@ -104,6 +115,10 @@ void Parser::program() {
 	baseTable->add(nil);
 
     ASMOther.Add("%include \"io64.inc\"");
+    ASMOther.Add("extern GetAsyncKeyState");
+    ASMOther.Add("extern Sleep");
+    ASMOther.Add("extern GetStdHandle");
+    ASMOther.Add("extern SetConsoleCursorPosition");
 
 	expect(Symbols::sys_program);
 	scanner.getNextLexem();
@@ -115,17 +130,23 @@ void Parser::program() {
 	expect(Symbols::semicolon);
 	scanner.getNextLexem();
 
-	SymbolTable *stb = new SymbolTable();
+	//SymbolTable *stb = new SymbolTable();
+	mainTable = new SymbolTable();
 	TreeNode *blockNode;
-	blockNode = block(false, stb);
+	//blockNode = block(false, stb);
+	blockNode = block(false, mainTable);
 
-	root->type->localParam = stb;
+	root->type->localParam = mainTable;
 	root->children.push_back(blockNode);
 
 	expect(Symbols::point);
+
+	generateAsmCode(root, false, true, false);
 }
 
-void Parser::genAsmCodeForIdentFunc(ExpressionNode *ident, ExpressionNode *expr, AsmOperand* shift) {
+void genAsmCodeForIdentFunc(TreeNode *_ident, TreeNode *_expr, AsmOperand* shift) {
+    ExpressionNode * ident = ((ExpressionNode*)_ident);
+    ExpressionNode * expr = ((ExpressionNode*)_expr);
     int mov = 0;
     if(ident->convertType->type == DescriptorTypes::scalarFloat ||
         (ident->convertType->type == DescriptorTypes::pointer &&
@@ -141,7 +162,7 @@ void Parser::genAsmCodeForIdentFunc(ExpressionNode *ident, ExpressionNode *expr,
                 ASM.Add(AsmOperation::asm_pop, rbp, AsmSizeof::s_dq, true, shift,"+"+std::to_string((mov+1)*8));
                 //ASM.Add(AsmOperation::asm_pop, new AsmInd("rbp+8+"+std::to_string(mov*8), AsmSizeof::s_dq, true, shift));
             } else if(baseTable->findInTable(ident->nameLex) != nullptr) {
-                ASM.Add(AsmOperation::asm_pop, new AsmInd("v_"+ident->nameLex, AsmSizeof::s_dq, true, shift));
+                ASM.Add(AsmOperation::asm_pop, new AsmInd("v_"+ident->nameLex), AsmSizeof::s_dq, true, shift);
             }
         } else if(expr->convertType->type == DescriptorTypes::scalarInt) {
             if(symbolStack->get()->findInTable(ident->nameLex) != nullptr) {
@@ -154,7 +175,7 @@ void Parser::genAsmCodeForIdentFunc(ExpressionNode *ident, ExpressionNode *expr,
                 ASM.Add(AsmOperation::asm_pop, rbp, AsmSizeof::s_dq, true, shift,"+"+std::to_string((mov+1)*8));
                 //ASM.Add(AsmOperation::asm_pop, new AsmInd("rbp+8+"+std::to_string(mov*8), AsmSizeof::s_dq, true, shift));
             } else if(baseTable->findInTable(ident->nameLex) != nullptr) {
-                ASM.Add(AsmOperation::asm_pop, new AsmInd("v_"+ident->nameLex, AsmSizeof::s_dq, true, shift));
+                ASM.Add(AsmOperation::asm_pop, new AsmInd("v_"+ident->nameLex), AsmSizeof::s_dq, true, shift);
             }
             ASM.Add(AsmOperation::asm_cvtsi2sd, xmm0, rbp, AsmSizeof::s_def, false, nullptr, "", AsmSizeof::s_dq, true, shift,"+"+std::to_string((mov+1)*8));
             //ASM.Add(AsmOperation::asm_cvtsi2sd, xmm0, new AsmInd("rbp+8+"+std::to_string(mov*8), AsmSizeof::s_dq, true, shift));
@@ -166,11 +187,17 @@ void Parser::genAsmCodeForIdentFunc(ExpressionNode *ident, ExpressionNode *expr,
         }
     } else {
         SymbolVar *svar = nullptr;
-        if( (svar = (SymbolVar*)(symbolStack->get()->findInTable(ident->nameLex))) != nullptr) {
+        //std::cout << ident->nameLex << "\n";
+        //if(symbolStack->get()->parent == nullptr) {
+         //   std::cout << "You are dumb!!!!\n";
+        //}
+         (SymbolVar*)(symbolStack->get()->parent->findInTable(ident->nameLex));
+        if((svar = (SymbolVar*)(symbolStack->get()->findInTable(ident->nameLex))) != nullptr) {
+            //svar = (SymbolVar*)(symbolStack->get()->findInTable(ident->nameLex));
             mov = symbolStack->get()->movInTable(ident->nameLex);
             //-
             if(svar->mot == MethodOfTransmission::paramvar) {
-                mov = 1;
+                //mov = 1;
                 //mov rax, qword [rbp+8+8]
                 //pop qword [rax]
                 ASM.Add(AsmOperation::asm_mov, rax, rbp, AsmSizeof::s_def, false, nullptr, "", AsmSizeof::s_dq, true, shift, "-"+std::to_string(mov*8));
@@ -181,11 +208,12 @@ void Parser::genAsmCodeForIdentFunc(ExpressionNode *ident, ExpressionNode *expr,
                 //ASM.Add(AsmOperation::asm_pop, new AsmInd("rbp-"+std::to_string(mov*8), AsmSizeof::s_dq, true, shift));
             }
         } else if((svar = (SymbolVar*)(symbolStack->get()->parent->findInTable(ident->nameLex))) != nullptr) {
+            //svar = (SymbolVar*)(symbolStack->get()->parent->findInTable(ident->nameLex));
             mov = symbolStack->get()->parent->movInTable(ident->nameLex);
             if(svar->mot == MethodOfTransmission::paramvar) {
                 //mov rax, qword [rbp+8+8]
                 //pop qword [rax]
-                mov = 1;
+                //mov = 1;
                 //nullptr
                 ASM.Add(AsmOperation::asm_mov, rax, rbp, AsmSizeof::s_def, false, nullptr, "", AsmSizeof::s_dq, true, nullptr, "+"+std::to_string((mov+1)*8));
                 //ASM.Add(AsmOperation::asm_mov, rax, new AsmInd("rbp+8+"+std::to_string(mov*8), AsmSizeof::s_dq, true));
@@ -195,52 +223,55 @@ void Parser::genAsmCodeForIdentFunc(ExpressionNode *ident, ExpressionNode *expr,
                 //ASM.Add(AsmOperation::asm_pop, new AsmInd("rbp+8+"+std::to_string(mov*8), AsmSizeof::s_dq, true, shift));
             }
         } else if((svar = (SymbolVar*)(baseTable->findInTable(ident->nameLex))) != nullptr) {
+            //svar = (SymbolVar*)(baseTable->findInTable(ident->nameLex));
             if(svar->mot == MethodOfTransmission::paramvar) {
                 //mov rax, qword [rbp+8+8]
                 //pop qword [rax]
                 mov = 1;
-                ASM.Add(AsmOperation::asm_mov, rax, new AsmInd("v_"+ident->nameLex, AsmSizeof::s_dq, true));
+                ASM.Add(AsmOperation::asm_mov, rax, new AsmInd("v_"+ident->nameLex), AsmSizeof::s_def, false, nullptr, "", AsmSizeof::s_dq, true);
                 ASM.Add(AsmOperation::asm_pop, rax, AsmSizeof::s_dq, true, shift);
             } else {
-                ASM.Add(AsmOperation::asm_pop, new AsmInd("v_"+ident->nameLex, AsmSizeof::s_dq, true, shift));
+                ASM.Add(AsmOperation::asm_pop, new AsmInd("v_"+ident->nameLex), AsmSizeof::s_dq, true, shift);
             }
         }
     }
 }
 
-void Parser::genAsmCodeForIdent(ExpressionNode *ident, ExpressionNode *expr, AsmOperand* shift) {
+void genAsmCodeForIdent(TreeNode *_ident, TreeNode *_expr, AsmOperand* shift) {
+    ExpressionNode * ident = ((ExpressionNode*)_ident);
+    ExpressionNode * expr = ((ExpressionNode*)_expr);
     if(ident->nameLex == "^") {
-        ASM.Add(AsmOperation::asm_mov, rax, new AsmInd("v_"+((ExpressionNode*)(ident->children[0]))->nameLex, AsmSizeof::s_dq, true, shift));
+        ASM.Add(AsmOperation::asm_mov, rax, new AsmInd("v_"+((ExpressionNode*)(ident->children[0]))->nameLex), AsmSizeof::s_def, false, nullptr, "", AsmSizeof::s_dq, true, shift);
         ASM.Add(AsmOperation::asm_pop, rax, AsmSizeof::s_dq, true);
 
     } else
     if(ident->convertType->type == DescriptorTypes::pointer) {
-        ASM.Add(AsmOperation::asm_pop, new AsmInd("v_"+ident->nameLex, AsmSizeof::s_dq, true, shift));
+        ASM.Add(AsmOperation::asm_pop, new AsmInd("v_"+ident->nameLex), AsmSizeof::s_dq, true, shift);
     } else if(ident->convertType->type == DescriptorTypes::scalarBoolean ||
         (ident->convertType->type == DescriptorTypes::pointer &&
         ((DescriptorPointers*)ident->convertType)->baseType->type == DescriptorTypes::scalarBoolean )) {
-        ASM.Add(AsmOperation::asm_pop, new AsmInd("v_"+ident->nameLex, AsmSizeof::s_dq, true, shift));
+        ASM.Add(AsmOperation::asm_pop, new AsmInd("v_"+ident->nameLex), AsmSizeof::s_dq, true, shift);
     } else if(ident->convertType->type == DescriptorTypes::scalarChar ||
         (ident->convertType->type == DescriptorTypes::pointer &&
         ((DescriptorPointers*)ident->convertType)->baseType->type == DescriptorTypes::scalarChar )) {
-        ASM.Add(AsmOperation::asm_pop, new AsmInd("v_"+ident->nameLex, AsmSizeof::s_dq, true, shift));
+        ASM.Add(AsmOperation::asm_pop, new AsmInd("v_"+ident->nameLex), AsmSizeof::s_dq, true, shift);
     } else if(ident->convertType->type == DescriptorTypes::scalarInt ||
         (ident->convertType->type == DescriptorTypes::pointer &&
         ((DescriptorPointers*)ident->convertType)->baseType->type == DescriptorTypes::scalarInt )) {
-        ASM.Add(AsmOperation::asm_pop, new AsmInd("v_"+ident->nameLex, AsmSizeof::s_dq, true, shift));
+        ASM.Add(AsmOperation::asm_pop, new AsmInd("v_"+ident->nameLex), AsmSizeof::s_dq, true, shift);
     } else if(ident->convertType->type == DescriptorTypes::scalarFloat ||
         (ident->convertType->type == DescriptorTypes::pointer &&
         ((DescriptorPointers*)ident->convertType)->baseType->type == DescriptorTypes::scalarFloat )) {
         if(expr->convertType->type == DescriptorTypes::scalarFloat) {
-            ASM.Add(AsmOperation::asm_pop, new AsmInd("v_"+ident->nameLex, AsmSizeof::s_dq, true, shift));
+            ASM.Add(AsmOperation::asm_pop, new AsmInd("v_"+ident->nameLex), AsmSizeof::s_dq, true, shift);
         } else if(expr->convertType->type == DescriptorTypes::scalarInt) {
-            ASM.Add(AsmOperation::asm_pop, new AsmInd("v_"+ident->nameLex, AsmSizeof::s_dq, true, shift));
-            ASM.Add(AsmOperation::asm_cvtsi2sd, xmm0, new AsmInd("v_"+ident->nameLex, AsmSizeof::s_dq, true, shift));
+            ASM.Add(AsmOperation::asm_pop, new AsmInd("v_"+ident->nameLex), AsmSizeof::s_dq, true, shift);
+            ASM.Add(AsmOperation::asm_cvtsi2sd, xmm0, new AsmInd("v_"+ident->nameLex), AsmSizeof::s_def, false, nullptr, "", AsmSizeof::s_dq, true, shift);
             //asmConstants.Add("8");
             //ASM.Add(AsmOperation::asm_sub, rsp, new AsmInd("_8", AsmSizeof::s_dq, true));
             ASM.Add(AsmOperation::asm_sub, rsp, new AsmImn("8"));
             ASM.Add(AsmOperation::asm_movq, rsp, xmm0, AsmSizeof::s_dq, true);
-            ASM.Add(AsmOperation::asm_pop, new AsmInd("v_"+ident->nameLex, AsmSizeof::s_dq, true, shift));
+            ASM.Add(AsmOperation::asm_pop, new AsmInd("v_"+ident->nameLex), AsmSizeof::s_dq, true, shift);
         }
     }
 }
@@ -258,13 +289,13 @@ TreeNode *Parser::statementIf(bool ifFunc) {
 
     IfActionNode *ifbody = new IfActionNode("IF_BODY");
 
-    int _boolOperCounter = boolOperCounter;
-    boolOperCounter++;
-    ASM.Add(AsmOperation::asm_pop, rax);
+    ///int _boolOperCounter = boolOperCounter;
+    ///boolOperCounter++;
+    ///ASM.Add(AsmOperation::asm_pop, rax);
     //asmConstants.Add("1");
     //ASM.Add(AsmOperation::asm_cmp, rax, new AsmInd("_1", AsmSizeof::s_dq, true));
-    ASM.Add(AsmOperation::asm_cmp, rax, new AsmImn("1"));
-    ASM.Add(AsmOperation::asm_jnz, new AsmMark("IFELSE"+std::to_string(_boolOperCounter), false));
+    ///ASM.Add(AsmOperation::asm_cmp, rax, new AsmImn("1"));
+    ///ASM.Add(AsmOperation::asm_jnz, new AsmMark("IFELSE"+std::to_string(_boolOperCounter), false));
 
     //scanner.getNextLexem();
     if(accept(Symbols::semicolon)) {
@@ -273,8 +304,8 @@ TreeNode *Parser::statementIf(bool ifFunc) {
     } else {
         ifbody->children.push_back(statement(ifFunc));
     }
-    ASM.Add(AsmOperation::asm_jmp, new AsmMark("_IFELSE"+std::to_string(_boolOperCounter), false));
-    ASM.Add("IFELSE"+std::to_string(_boolOperCounter)+":");
+    ///ASM.Add(AsmOperation::asm_jmp, new AsmMark("_IFELSE"+std::to_string(_boolOperCounter), false));
+    ///ASM.Add("IFELSE"+std::to_string(_boolOperCounter)+":");
 
     br->children.push_back(expr);
     br->children.push_back(ifbody);
@@ -297,7 +328,7 @@ TreeNode *Parser::statementIf(bool ifFunc) {
     } else {
         scanner.getPrevLexem();
     }
-    ASM.Add("_IFELSE"+std::to_string(_boolOperCounter)+":");
+    ///ASM.Add("_IFELSE"+std::to_string(_boolOperCounter)+":");
     return br;
 }
 
@@ -305,20 +336,18 @@ TreeNode *Parser::statementWhile(bool ifFunc) {
     stackBreak.push(boolOperCounter);
     int _boolOperCounter = boolOperCounter;
     boolOperCounter++;
-
-    ASM.Add("CONTINUE"+std::to_string(_boolOperCounter)+":");
-    ASM.Add("WHILE"+std::to_string(_boolOperCounter)+":");
+    ///ASM.Add("CONTINUE"+std::to_string(_boolOperCounter)+":");
+    ///ASM.Add("WHILE"+std::to_string(_boolOperCounter)+":");
 
     WhileActionNode *wh = new WhileActionNode(scanner.getLexem().lexem);
     scanner.getNextLexem();
 
-
     ExpressionNode *expr = condition(ifFunc, true);
-    ASM.Add(AsmOperation::asm_pop, r12);
-    //asmConstants.Add("1");
-    //ASM.Add(AsmOperation::asm_cmp, r12, new AsmInd("_1", AsmSizeof::s_dq, true));
-    ASM.Add(AsmOperation::asm_cmp, r12, new AsmImn("1"));
-    ASM.Add(AsmOperation::asm_jnz, new AsmMark("_WHILE"+std::to_string(_boolOperCounter), false));
+    ///ASM.Add(AsmOperation::asm_pop, r12);
+    /////asmConstants.Add("1");
+    /////ASM.Add(AsmOperation::asm_cmp, r12, new AsmInd("_1", AsmSizeof::s_dq, true));
+    ///ASM.Add(AsmOperation::asm_cmp, r12, new AsmImn("1"));
+    ///ASM.Add(AsmOperation::asm_jnz, new AsmMark("_WHILE"+std::to_string(_boolOperCounter), false));
 
     if(expr->convertType->type != DescriptorTypes::scalarBoolean) {
         //ERROR must be int
@@ -335,9 +364,9 @@ TreeNode *Parser::statementWhile(bool ifFunc) {
         wh->children.push_back(statement(ifFunc));
     }
 
-    ASM.Add(AsmOperation::asm_jmp, new AsmMark("WHILE"+std::to_string(_boolOperCounter), false));
-    ASM.Add("_WHILE"+std::to_string(_boolOperCounter)+":");
-    ASM.Add("BREAK"+std::to_string(_boolOperCounter)+":");
+    ///ASM.Add(AsmOperation::asm_jmp, new AsmMark("WHILE"+std::to_string(_boolOperCounter), false));
+    ///ASM.Add("_WHILE"+std::to_string(_boolOperCounter)+":");
+    ///ASM.Add("BREAK"+std::to_string(_boolOperCounter)+":");
     stackBreak.pop();
     return wh;
 }
@@ -346,9 +375,8 @@ TreeNode *Parser::statementUntil(bool ifFunc) {
     stackBreak.push(boolOperCounter);
     int _boolOperCounter = boolOperCounter;
     boolOperCounter++;
-
-    ASM.Add("CONTINUE"+std::to_string(_boolOperCounter)+":");
-    ASM.Add("UNTIL"+std::to_string(_boolOperCounter)+":");
+    ///ASM.Add("CONTINUE"+std::to_string(_boolOperCounter)+":");
+    ///ASM.Add("UNTIL"+std::to_string(_boolOperCounter)+":");
 
     RepeatActionNode *rt = new RepeatActionNode(scanner.getLexem().lexem);
     scanner.getNextLexem();
@@ -364,12 +392,12 @@ TreeNode *Parser::statementUntil(bool ifFunc) {
     scanner.getNextLexem();
     ExpressionNode *expr = condition(ifFunc, true);
 
-    ASM.Add(AsmOperation::asm_pop, rax);
-    //asmConstants.Add("0");
-    //ASM.Add(AsmOperation::asm_cmp, rax, new AsmInd("_0", AsmSizeof::s_dq, true));
-    ASM.Add(AsmOperation::asm_cmp, rax, new AsmImn("0"));
-    ASM.Add(AsmOperation::asm_jz, new AsmMark("UNTIL"+std::to_string(_boolOperCounter), false));
-    ASM.Add("BREAK"+std::to_string(_boolOperCounter)+":");
+    ///ASM.Add(AsmOperation::asm_pop, rax);
+    /////asmConstants.Add("0");
+    /////ASM.Add(AsmOperation::asm_cmp, rax, new AsmInd("_0", AsmSizeof::s_dq, true));
+    ///ASM.Add(AsmOperation::asm_cmp, rax, new AsmImn("0"));
+    ///ASM.Add(AsmOperation::asm_jz, new AsmMark("UNTIL"+std::to_string(_boolOperCounter), false));
+    ///ASM.Add("BREAK"+std::to_string(_boolOperCounter)+":");
     stackBreak.pop();
 
     if(expr->convertType->type != DescriptorTypes::scalarBoolean) {
@@ -394,13 +422,13 @@ TreeNode *Parser::statementFor(bool ifFunc) {
 		error.printError(Errors::ERROR_BAD_TYPE, scanner.getLexem().pos, "Expected integer.");
 	}
 	if(ident->nameLex == "nil" || ident->nameLex == "true" || ident->nameLex == "false") {
-           error.printError(Errors::ERROR_UNEXPECT_SYMBOL, scanner.getLexem().pos, "");
+        error.printError(Errors::ERROR_UNEXPECT_SYMBOL, scanner.getLexem().pos, "");
 	}
 	if(ident->nameLex == "^" || ident->nameLex == "@") {
 
 	} else if(((VarNode*)ident)->type->_class != SymbolTypes::vars) {
-           error.printError(Errors::ERROR_EXPRESSION, scanner.getLexem().pos, "Expect var.");
-       }
+        error.printError(Errors::ERROR_EXPRESSION, scanner.getLexem().pos, "Expect var.");
+    }
 	expect(Symbols::assign);
 
 	if(scanner.getPrevLexem().val == (int)Symbols::rpar) {
@@ -409,28 +437,28 @@ TreeNode *Parser::statementFor(bool ifFunc) {
 		scanner.getNextLexem();
 	}
 
-    AsmOperand* shift = nullptr;
-    if(ident->nameLex == "^" || ident->nameLex == "@") {//need before expression
-        if(___shift != 0) {
-            ASM.Add(AsmOperation::asm_pop, r13);
-            ___shift--;
-            while(___shift != 0) {
-                ASM.Add(AsmOperation::asm_pop, r13);
-                ___shift--;
-                ASM.Add(AsmOperation::asm_add, r13, r14);
-            }
-            shift = r13;
-        }
-	} else if(___shift != 0) {
-        ASM.Add(AsmOperation::asm_pop, r13);
-        ___shift--;
-        while(___shift != 0) {
-            ASM.Add(AsmOperation::asm_pop, r14);
-            ___shift--;
-            ASM.Add(AsmOperation::asm_add, r13, r14);
-        }
-        shift = r13;
-    }
+    ///AsmOperand* shift = nullptr;
+    ///if(ident->nameLex == "^" || ident->nameLex == "@") {//need before expression
+    ///    if(___shift != 0) {
+    ///        ASM.Add(AsmOperation::asm_pop, r13);
+    ///        ___shift--;
+    ///        while(___shift != 0) {
+    ///            ASM.Add(AsmOperation::asm_pop, r13);
+    ///            ___shift--;
+    ///            ASM.Add(AsmOperation::asm_add, r13, r14);
+    ///        }
+    ///        shift = r13;
+    ///    }
+	///} else if(___shift != 0) {
+    ///    ASM.Add(AsmOperation::asm_pop, r13);
+    ///    ___shift--;
+    ///    while(___shift != 0) {
+    ///        ASM.Add(AsmOperation::asm_pop, r14);
+    ///        ___shift--;
+    ///        ASM.Add(AsmOperation::asm_add, r13, r14);
+    ///    }
+    ///    shift = r13;
+    ///}
        ///////////
 	BinOperationNode *eq = new BinOperationNode(scanner.getSymbolTypeStr(scanner.getLexem().type), scanner.getLexem());
 	scanner.getNextLexem();
@@ -440,10 +468,10 @@ TreeNode *Parser::statementFor(bool ifFunc) {
 		error.printError(Errors::ERROR_BAD_TYPE, scanner.getLexem().pos, "Expected integer.");
 	}
 
-	if(!ifFunc)
-        genAsmCodeForIdent(ident, expr0, shift);
-	else
-        genAsmCodeForIdentFunc(ident, expr0, nullptr);
+	///if(!ifFunc)
+    ///    genAsmCodeForIdent(ident, expr0, shift);
+	///else
+    ///    genAsmCodeForIdentFunc(ident, expr0, nullptr);
 	////////////////
 	eq->children.push_back(ident);
 	eq->children.push_back(expr0);
@@ -466,77 +494,74 @@ TreeNode *Parser::statementFor(bool ifFunc) {
 		error.printError(Errors::ERROR_BAD_TYPE, scanner.getLexem().pos, "");
 	}
 
-       stackBreak.push(boolOperCounter);
-       int _boolOperCounter = boolOperCounter;
-       boolOperCounter++;
-	//continue CONTINUE
-	//break BREAK
-	ASM.Add(AsmOperation::asm_jmp, new AsmMark("FOR"+std::to_string(_boolOperCounter), false));
-	ASM.Add("CONTINUE"+std::to_string(_boolOperCounter)+":");
-	asmConstants.Add("1");
-    ASM.Add(AsmOperation::asm_push, new AsmInd("_1", AsmSizeof::s_dq, true));
-    ASM.Add(AsmOperation::asm_pop, rbx);
+    stackBreak.push(boolOperCounter);
+    int _boolOperCounter = boolOperCounter;
+    boolOperCounter++;
+	///ASM.Add(AsmOperation::asm_jmp, new AsmMark("FOR"+std::to_string(_boolOperCounter), false));
+	///ASM.Add("CONTINUE"+std::to_string(_boolOperCounter)+":");
+	///asmConstants.Add("1");
+    ///ASM.Add(AsmOperation::asm_push, new AsmInd("_1", AsmSizeof::s_dq, true));
+    ///ASM.Add(AsmOperation::asm_pop, rbx);
 	if(fr->nameNode == "to") {
-        if(ifFunc) {
-                int mov = 0;
-            if(symbolStack->get()->findInTable(ident->nameLex) != nullptr) {
-                mov = symbolStack->get()->movInTable(ident->nameLex);
-                ASM.Add(AsmOperation::asm_add, rbp, rbx, AsmSizeof::s_dq, true, nullptr, "-"+std::to_string(mov*8), AsmSizeof::s_def, false, nullptr, "");
-                //ASM.Add(AsmOperation::asm_add, new AsmInd("rbp-"+std::to_string(mov*8), AsmSizeof::s_dq, true, shift), rbx);
-            } else if(symbolStack->get()->parent->findInTable(ident->nameLex) != nullptr) {
-                mov = symbolStack->get()->parent->movInTable(ident->nameLex);
-                ASM.Add(AsmOperation::asm_add, rbp, rbx, AsmSizeof::s_dq, true, nullptr, "+"+std::to_string((mov+1)*8), AsmSizeof::s_def, false, nullptr, "");
-                //ASM.Add(AsmOperation::asm_add, new AsmInd("rbp+8+"+std::to_string(mov*8), AsmSizeof::s_dq, true, shift), rbx);
-            } else if(baseTable->findInTable(ident->nameLex) != nullptr) {
-                ASM.Add(AsmOperation::asm_add, new AsmInd("v_"+ident->nameLex, AsmSizeof::s_dq, true, shift), rbx);
-            }
-        } else {
-            ASM.Add(AsmOperation::asm_add, new AsmInd("v_" + ident->nameLex, AsmSizeof::s_dq, true), rbx);
-        }
+        ///if(ifFunc) {
+            ///int mov = 0;
+            ///if(symbolStack->get()->findInTable(ident->nameLex) != nullptr) {
+            ///    mov = symbolStack->get()->movInTable(ident->nameLex);
+            ///    ASM.Add(AsmOperation::asm_add, rbp, rbx, AsmSizeof::s_dq, true, nullptr, "-"+std::to_string(mov*8), AsmSizeof::s_def, false, nullptr, "");
+            ///    //ASM.Add(AsmOperation::asm_add, new AsmInd("rbp-"+std::to_string(mov*8), AsmSizeof::s_dq, true, shift), rbx);
+            ///} else if(symbolStack->get()->parent->findInTable(ident->nameLex) != nullptr) {
+            ///    mov = symbolStack->get()->parent->movInTable(ident->nameLex);
+            ///    ASM.Add(AsmOperation::asm_add, rbp, rbx, AsmSizeof::s_dq, true, nullptr, "+"+std::to_string((mov+1)*8), AsmSizeof::s_def, false, nullptr, "");
+            ///    //ASM.Add(AsmOperation::asm_add, new AsmInd("rbp+8+"+std::to_string(mov*8), AsmSizeof::s_dq, true, shift), rbx);
+            ///} else if(baseTable->findInTable(ident->nameLex) != nullptr) {
+            ///    ASM.Add(AsmOperation::asm_add, new AsmInd("v_"+ident->nameLex, AsmSizeof::s_dq, true, shift), rbx);
+            ///}
+        ///} else {
+        ///    ASM.Add(AsmOperation::asm_add, new AsmInd("v_" + ident->nameLex, AsmSizeof::s_dq, true), rbx);
+        ///}
     } else {
-        if(ifFunc) {
-            int mov = 0;
-            if(symbolStack->get()->findInTable(ident->nameLex) != nullptr) {
-                mov = symbolStack->get()->movInTable(ident->nameLex);
-                ASM.Add(AsmOperation::asm_sub, rbp, rbx, AsmSizeof::s_dq, true, nullptr, "-"+std::to_string(mov*8), AsmSizeof::s_def, false, nullptr, "");
-                //ASM.Add(AsmOperation::asm_sub, new AsmInd("rbp-"+std::to_string(mov*8), AsmSizeof::s_dq, true), rbx);
-            } else if(symbolStack->get()->parent->findInTable(ident->nameLex) != nullptr) {
-                mov = symbolStack->get()->parent->movInTable(ident->nameLex);
-                ASM.Add(AsmOperation::asm_sub, rbp, rbx, AsmSizeof::s_dq, true, nullptr, "+"+std::to_string((mov+1)*8), AsmSizeof::s_def, false, nullptr, "");
-                //ASM.Add(AsmOperation::asm_sub, new AsmInd("rbp+8+"+std::to_string(mov*8), AsmSizeof::s_dq, true), rbx);
-            } else if(baseTable->findInTable(ident->nameLex) != nullptr) {
-                ASM.Add(AsmOperation::asm_sub, new AsmInd("v_"+ident->nameLex, AsmSizeof::s_dq, true), rbx);
-            }
-        } else {
-            ASM.Add(AsmOperation::asm_sub, new AsmInd("v_" + ident->nameLex, AsmSizeof::s_dq, true), rbx);
-        }
+        ///if(ifFunc) {
+        ///    int mov = 0;
+        ///    if(symbolStack->get()->findInTable(ident->nameLex) != nullptr) {
+        ///        mov = symbolStack->get()->movInTable(ident->nameLex);
+        ///        ASM.Add(AsmOperation::asm_sub, rbp, rbx, AsmSizeof::s_dq, true, nullptr, "-"+std::to_string(mov*8), AsmSizeof::s_def, false, nullptr, "");
+        ///        //ASM.Add(AsmOperation::asm_sub, new AsmInd("rbp-"+std::to_string(mov*8), AsmSizeof::s_dq, true), rbx);
+        ///    } else if(symbolStack->get()->parent->findInTable(ident->nameLex) != nullptr) {
+        ///        mov = symbolStack->get()->parent->movInTable(ident->nameLex);
+        ///        ASM.Add(AsmOperation::asm_sub, rbp, rbx, AsmSizeof::s_dq, true, nullptr, "+"+std::to_string((mov+1)*8), AsmSizeof::s_def, false, nullptr, "");
+        ///        //ASM.Add(AsmOperation::asm_sub, new AsmInd("rbp+8+"+std::to_string(mov*8), AsmSizeof::s_dq, true), rbx);
+        ///    } else if(baseTable->findInTable(ident->nameLex) != nullptr) {
+        ///        ASM.Add(AsmOperation::asm_sub, new AsmInd("v_"+ident->nameLex, AsmSizeof::s_dq, true), rbx);
+        ///    }
+        ///} else {
+        ///    ASM.Add(AsmOperation::asm_sub, new AsmInd("v_" + ident->nameLex, AsmSizeof::s_dq, true), rbx);
+        ///}
     }
-    ASM.Add(AsmOperation::asm_pop, r12);
+    ///ASM.Add(AsmOperation::asm_pop, r12);
 
-    if(ifFunc) {
-        int mov = 0;
-        if(symbolStack->get()->findInTable(ident->nameLex) != nullptr) {
-            mov = symbolStack->get()->movInTable(ident->nameLex);
-            ASM.Add(AsmOperation::asm_cmp, r12, rbp, AsmSizeof::s_def, false, nullptr, "", AsmSizeof::s_dq, true, nullptr,"-"+std::to_string(mov*8));
-            //ASM.Add(AsmOperation::asm_cmp, r12, new AsmInd("rbp-"+std::to_string(mov*8), AsmSizeof::s_dq, true));
-        } else if(symbolStack->get()->parent->findInTable(ident->nameLex) != nullptr) {
-            mov = symbolStack->get()->parent->movInTable(ident->nameLex);
-            ASM.Add(AsmOperation::asm_cmp, r12, rbp, AsmSizeof::s_def, false, nullptr, "", AsmSizeof::s_dq, true, nullptr, "+"+std::to_string((mov+1)*8));
-            //ASM.Add(AsmOperation::asm_cmp, r12, new AsmInd("rbp+8+"+std::to_string(mov*8), AsmSizeof::s_dq, true));
-        } else if(baseTable->findInTable(ident->nameLex) != nullptr) {
-            ASM.Add(AsmOperation::asm_cmp, r12, new AsmInd("v_"+ident->nameLex, AsmSizeof::s_dq, true));
-        }
-    } else {
-        ASM.Add(AsmOperation::asm_cmp, r12, new AsmInd("v_" + ident->nameLex, AsmSizeof::s_dq, true));
-    }
-    ASM.Add(AsmOperation::asm_push, r12);
-    //ASM.Add(AsmOperation::asm_jz, new AsmMark("BREAK"+std::to_string(_boolOperCounter), false));
-    if(fr->nameNode == "to") {
-        ASM.Add(AsmOperation::asm_jle, new AsmMark("BREAK"+std::to_string(_boolOperCounter), false));
-    } else {
-        ASM.Add(AsmOperation::asm_jge, new AsmMark("BREAK"+std::to_string(_boolOperCounter), false));
-    }
-	ASM.Add("FOR"+std::to_string(_boolOperCounter)+":");
+    ///if(ifFunc) {
+    ///    int mov = 0;
+    ///    if(symbolStack->get()->findInTable(ident->nameLex) != nullptr) {
+    ///        mov = symbolStack->get()->movInTable(ident->nameLex);
+    ///        ASM.Add(AsmOperation::asm_cmp, r12, rbp, AsmSizeof::s_def, false, nullptr, "", AsmSizeof::s_dq, true, nullptr,"-"+std::to_string(mov*8));
+    ///        //ASM.Add(AsmOperation::asm_cmp, r12, new AsmInd("rbp-"+std::to_string(mov*8), AsmSizeof::s_dq, true));
+    ///    } else if(symbolStack->get()->parent->findInTable(ident->nameLex) != nullptr) {
+    ///        mov = symbolStack->get()->parent->movInTable(ident->nameLex);
+    ///        ASM.Add(AsmOperation::asm_cmp, r12, rbp, AsmSizeof::s_def, false, nullptr, "", AsmSizeof::s_dq, true, nullptr, "+"+std::to_string((mov+1)*8));
+    ///        //ASM.Add(AsmOperation::asm_cmp, r12, new AsmInd("rbp+8+"+std::to_string(mov*8), AsmSizeof::s_dq, true));
+    ///    } else if(baseTable->findInTable(ident->nameLex) != nullptr) {
+    ///        ASM.Add(AsmOperation::asm_cmp, r12, new AsmInd("v_"+ident->nameLex, AsmSizeof::s_dq, true));
+    ///    }
+    ///} else {
+    ///    ASM.Add(AsmOperation::asm_cmp, r12, new AsmInd("v_" + ident->nameLex, AsmSizeof::s_dq, true));
+    ///}
+    ///ASM.Add(AsmOperation::asm_push, r12);
+    ///if(fr->nameNode == "to") {
+    ///    ASM.Add(AsmOperation::asm_jle, new AsmMark("BREAK"+std::to_string(_boolOperCounter), false));
+    ///} else {
+    ///    ASM.Add(AsmOperation::asm_jge, new AsmMark("BREAK"+std::to_string(_boolOperCounter), false));
+    ///}
+	///ASM.Add("FOR"+std::to_string(_boolOperCounter)+":");
 
 	expect(Symbols::sys_do);
 	scanner.getNextLexem();
@@ -548,70 +573,70 @@ TreeNode *Parser::statementFor(bool ifFunc) {
 		fr->children.push_back(statement(ifFunc));
 	}
 
-	asmConstants.Add("1");
-    ASM.Add(AsmOperation::asm_push, new AsmInd("_1", AsmSizeof::s_dq, true));
-    ASM.Add(AsmOperation::asm_pop, rbx);
-	if(fr->nameNode == "to") {
-        if(ifFunc) {
-                int mov = 0;
-            if(symbolStack->get()->findInTable(ident->nameLex) != nullptr) {
-                mov = symbolStack->get()->movInTable(ident->nameLex);
-                ASM.Add(AsmOperation::asm_add, rbp, rbx, AsmSizeof::s_dq, true, nullptr, "-"+std::to_string(mov*8), AsmSizeof::s_def, false, nullptr, "");
-                //ASM.Add(AsmOperation::asm_add, new AsmInd("rbp-"+std::to_string(mov*8), AsmSizeof::s_dq, true), rbx);
-            } else if(symbolStack->get()->parent->findInTable(ident->nameLex) != nullptr) {
-                mov = symbolStack->get()->parent->movInTable(ident->nameLex);
-                ASM.Add(AsmOperation::asm_add, rbp, rbx, AsmSizeof::s_dq, true, nullptr, "+"+std::to_string((mov+1)*8), AsmSizeof::s_def, false, nullptr, "");
-                //ASM.Add(AsmOperation::asm_add, new AsmInd("rbp+8+"+std::to_string(mov*8), AsmSizeof::s_dq, true), rbx);
-            } else if(baseTable->findInTable(ident->nameLex) != nullptr) {
-                ASM.Add(AsmOperation::asm_add, new AsmInd("v_"+ident->nameLex, AsmSizeof::s_dq, true), rbx);
-            }
-        } else {
-            ASM.Add(AsmOperation::asm_add, new AsmInd("v_" + ident->nameLex, AsmSizeof::s_dq, true), rbx);
-        }
-    } else {
-        if(ifFunc) {
-            int mov = 0;
-            if(symbolStack->get()->findInTable(ident->nameLex) != nullptr) {
-                mov = symbolStack->get()->movInTable(ident->nameLex);
-                ASM.Add(AsmOperation::asm_sub, rbp, rbx, AsmSizeof::s_dq, true, nullptr,"-"+std::to_string(mov*8), AsmSizeof::s_def, false, nullptr, "");
-                //ASM.Add(AsmOperation::asm_sub, new AsmInd("rbp-"+std::to_string(mov*8), AsmSizeof::s_dq, true), rbx);
-            } else if(symbolStack->get()->parent->findInTable(ident->nameLex) != nullptr) {
-                mov = symbolStack->get()->parent->movInTable(ident->nameLex);
-                ASM.Add(AsmOperation::asm_sub, rbp, rbx, AsmSizeof::s_dq, true, nullptr, "+"+std::to_string((mov+1)*8), AsmSizeof::s_def, false, nullptr, "");
-                //ASM.Add(AsmOperation::asm_sub, new AsmInd("rbp+8+"+std::to_string(mov*8), AsmSizeof::s_dq, true), rbx);
-            } else if(baseTable->findInTable(ident->nameLex) != nullptr) {
-                ASM.Add(AsmOperation::asm_sub, new AsmInd("v_"+ident->nameLex, AsmSizeof::s_dq, true), rbx);
-            }
-        } else {
-            ASM.Add(AsmOperation::asm_sub, new AsmInd("v_" + ident->nameLex, AsmSizeof::s_dq, true), rbx);
-        }
-    }
-    ASM.Add(AsmOperation::asm_pop, r12);
-    if(ifFunc) {
-        int mov = 0;
-        if(symbolStack->get()->findInTable(ident->nameLex) != nullptr) {
-            mov = symbolStack->get()->movInTable(ident->nameLex);
-            ASM.Add(AsmOperation::asm_cmp, r12, rbp, AsmSizeof::s_def, false, nullptr, "", AsmSizeof::s_dq, true, nullptr, "-"+std::to_string(mov*8));
-            //ASM.Add(AsmOperation::asm_cmp, r12, new AsmInd("rbp-"+std::to_string(mov*8), AsmSizeof::s_dq, true));
-        } else if(symbolStack->get()->parent->findInTable(ident->nameLex) != nullptr) {
-            mov = symbolStack->get()->parent->movInTable(ident->nameLex);
-            ASM.Add(AsmOperation::asm_cmp, r12, rbp, AsmSizeof::s_def, false, nullptr, "", AsmSizeof::s_dq, true, nullptr, "+"+std::to_string((mov+1)*8));
-            //ASM.Add(AsmOperation::asm_cmp, r12, new AsmInd("rbp+8+"+std::to_string(mov*8), AsmSizeof::s_dq, true));
-        } else if(baseTable->findInTable(ident->nameLex) != nullptr) {
-            ASM.Add(AsmOperation::asm_cmp, r12, new AsmInd("v_"+ident->nameLex, AsmSizeof::s_dq, true));
-        }
-    } else {
-        ASM.Add(AsmOperation::asm_cmp, r12, new AsmInd("v_" + ident->nameLex, AsmSizeof::s_dq, true));
-    }
-    ASM.Add(AsmOperation::asm_push, r12);
-
-    if(fr->nameNode == "to") {
-        ASM.Add(AsmOperation::asm_jge, new AsmMark("FOR"+std::to_string(_boolOperCounter), false));
-    } else {
-        ASM.Add(AsmOperation::asm_jle, new AsmMark("FOR"+std::to_string(_boolOperCounter), false));
-    }
-    ASM.Add("BREAK"+std::to_string(_boolOperCounter)+":");
-    ASM.Add(AsmOperation::asm_pop, r12);
+	///asmConstants.Add("1");
+    ///ASM.Add(AsmOperation::asm_push, new AsmInd("_1", AsmSizeof::s_dq, true));
+    ///ASM.Add(AsmOperation::asm_pop, rbx);
+	///if(fr->nameNode == "to") {
+    ///    if(ifFunc) {
+    ///            int mov = 0;
+    ///        if(symbolStack->get()->findInTable(ident->nameLex) != nullptr) {
+    ///            mov = symbolStack->get()->movInTable(ident->nameLex);
+    ///            ASM.Add(AsmOperation::asm_add, rbp, rbx, AsmSizeof::s_dq, true, nullptr, "-"+std::to_string(mov*8), AsmSizeof::s_def, false, nullptr, "");
+    ///            //ASM.Add(AsmOperation::asm_add, new AsmInd("rbp-"+std::to_string(mov*8), AsmSizeof::s_dq, true), rbx);
+    ///        } else if(symbolStack->get()->parent->findInTable(ident->nameLex) != nullptr) {
+    ///            mov = symbolStack->get()->parent->movInTable(ident->nameLex);
+    ///            ASM.Add(AsmOperation::asm_add, rbp, rbx, AsmSizeof::s_dq, true, nullptr, "+"+std::to_string((mov+1)*8), AsmSizeof::s_def, false, nullptr, "");
+    ///            //ASM.Add(AsmOperation::asm_add, new AsmInd("rbp+8+"+std::to_string(mov*8), AsmSizeof::s_dq, true), rbx);
+    ///        } else if(baseTable->findInTable(ident->nameLex) != nullptr) {
+    ///            ASM.Add(AsmOperation::asm_add, new AsmInd("v_"+ident->nameLex, AsmSizeof::s_dq, true), rbx);
+    ///        }
+    ///    } else {
+    ///        ASM.Add(AsmOperation::asm_add, new AsmInd("v_" + ident->nameLex, AsmSizeof::s_dq, true), rbx);
+    ///    }
+    ///} else {
+    ///    if(ifFunc) {
+    ///        int mov = 0;
+    ///        if(symbolStack->get()->findInTable(ident->nameLex) != nullptr) {
+    ///            mov = symbolStack->get()->movInTable(ident->nameLex);
+    ///            ASM.Add(AsmOperation::asm_sub, rbp, rbx, AsmSizeof::s_dq, true, nullptr,"-"+std::to_string(mov*8), AsmSizeof::s_def, false, nullptr, "");
+    ///            //ASM.Add(AsmOperation::asm_sub, new AsmInd("rbp-"+std::to_string(mov*8), AsmSizeof::s_dq, true), rbx);
+    ///        } else if(symbolStack->get()->parent->findInTable(ident->nameLex) != nullptr) {
+    ///            mov = symbolStack->get()->parent->movInTable(ident->nameLex);
+    ///            ASM.Add(AsmOperation::asm_sub, rbp, rbx, AsmSizeof::s_dq, true, nullptr, "+"+std::to_string((mov+1)*8), AsmSizeof::s_def, false, nullptr, "");
+    ///            //ASM.Add(AsmOperation::asm_sub, new AsmInd("rbp+8+"+std::to_string(mov*8), AsmSizeof::s_dq, true), rbx);
+    ///        } else if(baseTable->findInTable(ident->nameLex) != nullptr) {
+    ///            ASM.Add(AsmOperation::asm_sub, new AsmInd("v_"+ident->nameLex, AsmSizeof::s_dq, true), rbx);
+    ///        }
+    ///    } else {
+    ///        ASM.Add(AsmOperation::asm_sub, new AsmInd("v_" + ident->nameLex, AsmSizeof::s_dq, true), rbx);
+    ///    }
+    ///}
+    ///ASM.Add(AsmOperation::asm_pop, r12);
+    ///if(ifFunc) {
+    ///    int mov = 0;
+    ///    if(symbolStack->get()->findInTable(ident->nameLex) != nullptr) {
+    ///        mov = symbolStack->get()->movInTable(ident->nameLex);
+    ///        ASM.Add(AsmOperation::asm_cmp, r12, rbp, AsmSizeof::s_def, false, nullptr, "", AsmSizeof::s_dq, true, nullptr, "-"+std::to_string(mov*8));
+    ///        //ASM.Add(AsmOperation::asm_cmp, r12, new AsmInd("rbp-"+std::to_string(mov*8), AsmSizeof::s_dq, true));
+    ///    } else if(symbolStack->get()->parent->findInTable(ident->nameLex) != nullptr) {
+    ///        mov = symbolStack->get()->parent->movInTable(ident->nameLex);
+    ///        ASM.Add(AsmOperation::asm_cmp, r12, rbp, AsmSizeof::s_def, false, nullptr, "", AsmSizeof::s_dq, true, nullptr, "+"+std::to_string((mov+1)*8));
+    ///        //ASM.Add(AsmOperation::asm_cmp, r12, new AsmInd("rbp+8+"+std::to_string(mov*8), AsmSizeof::s_dq, true));
+    ///    } else if(baseTable->findInTable(ident->nameLex) != nullptr) {
+    ///        ASM.Add(AsmOperation::asm_cmp, r12, new AsmInd("v_"+ident->nameLex, AsmSizeof::s_dq, true));
+    ///    }
+    ///} else {
+    ///    ASM.Add(AsmOperation::asm_cmp, r12, new AsmInd("v_" + ident->nameLex, AsmSizeof::s_dq, true));
+    ///}
+    ///ASM.Add(AsmOperation::asm_push, r12);
+    ///
+    ///if(fr->nameNode == "to") {
+    ///    ASM.Add(AsmOperation::asm_jge, new AsmMark("FOR"+std::to_string(_boolOperCounter), false));
+    ///} else {
+    ///    ASM.Add(AsmOperation::asm_jle, new AsmMark("FOR"+std::to_string(_boolOperCounter), false));
+    ///}
+    ///ASM.Add("BREAK"+std::to_string(_boolOperCounter)+":");
+    ///ASM.Add(AsmOperation::asm_pop, r12);
     stackBreak.pop();
 	return fr;
 }
@@ -623,6 +648,66 @@ TreeNode *Parser::statement(bool ifFunc) {
 	if (accept(Symbols::ident) || accept(Symbols::at)) {
 		std::string lex = scanner.getLexem().lexem;
 		std::transform(lex.begin(), lex.end(), lex.begin(), ::tolower);
+		/*if(lex == "random") {
+            ActionNode *rnd = new ActionNode("RANDOM");
+            scanner.getNextLexem();
+			expect(Symbols::lpar);
+			scanner.getNextLexem();
+			expect(Symbols::rpar);
+			scanner.getNextLexem();
+			return rnd;
+		} else*/
+		if(lex == "sleep") {
+            ActionNode *slp = new ActionNode("SLEEP");
+            scanner.getNextLexem();
+			expect(Symbols::lpar);
+			scanner.getNextLexem();
+			TreeNode *val;
+			val = condition(ifFunc, true);
+            if(((ExpressionNode*)val)->convertType->type != DescriptorTypes::scalarInt) {
+                //ERROR
+                error.printError(Errors::ERROR_BAD_TYPE, scanner.getLexem().pos, "");
+            }
+			expect(Symbols::rpar);
+			scanner.getNextLexem();
+			slp->children.push_back(val);
+			return slp;
+		} else
+		if(lex == "initscr") {
+            ActionNode *iscr = new ActionNode("INITSCR");
+            scanner.getNextLexem();
+			expect(Symbols::lpar);
+			scanner.getNextLexem();
+			expect(Symbols::rpar);
+			scanner.getNextLexem();
+			return iscr;
+		} else
+		if(lex == "gotoxy") {
+            ActionNode *gtxy = new ActionNode("GOTOXY");
+            scanner.getNextLexem();
+			expect(Symbols::lpar);
+			scanner.getNextLexem();
+
+			TreeNode *val1, *val2;
+			val1 = condition(ifFunc, true);
+			if(((ExpressionNode*)val1)->convertType->type != DescriptorTypes::scalarInt) {
+                //ERROR
+                error.printError(Errors::ERROR_BAD_TYPE, scanner.getLexem().pos, "");
+            }
+			expect(Symbols::comma);
+			scanner.getNextLexem();
+			val2 = condition(ifFunc, true);
+            if(((ExpressionNode*)val2)->convertType->type != DescriptorTypes::scalarInt) {
+                //ERROR
+                error.printError(Errors::ERROR_BAD_TYPE, scanner.getLexem().pos, "");
+            }
+
+			expect(Symbols::rpar);
+			scanner.getNextLexem();
+			gtxy->children.push_back(val1);
+			gtxy->children.push_back(val2);
+			return gtxy;
+		} else
 		if(lex == "write") {
 			ActionNode *wr = new ActionNode("WRITE");
 			scanner.getNextLexem();
@@ -630,7 +715,7 @@ TreeNode *Parser::statement(bool ifFunc) {
 			scanner.getNextLexem();
 			TreeNode *ident;
 
-			std::string format = "";
+			///std::string format = "";
 			while(!accept(Symbols::rpar)) {
                 if(accept(Symbols::comma)) {
                     scanner.getNextLexem();
@@ -638,16 +723,16 @@ TreeNode *Parser::statement(bool ifFunc) {
                 }
                 if(scanner.getLexem().val == (int)Symbols::sys_string) {
                     ident = new StringNode(scanner.getSymbolTypeStr(scanner.getLexem().type), scanner.getLexem());
-                    format += scanner.getLexem().lexem;
+                    ///format += scanner.getLexem().lexem;
                     wr->children.push_back(ident);
                     scanner.getNextLexem();
-                    if(accept(Symbols::rpar)) {
-                        ASM.Add(AsmOperation::asm_mov, rcx, new AsmInd("format"+std::to_string(asmFormat.getSize()), AsmSizeof::s_def, false));
-                        asmFormat.Add(format);
-                        ASM.Add(AsmOperation::asm_sub, rsp, new AsmImn("40"));
-                        ASM.Add(AsmOperation::asm_call, new AsmInd("printf", AsmSizeof::s_def, false));
-                        ASM.Add(AsmOperation::asm_add, rsp, new AsmImn("40"));
-                    }
+                    ///if(accept(Symbols::rpar)) {
+                    ///    ASM.Add(AsmOperation::asm_mov, rcx, new AsmInd("format"+std::to_string(asmFormat.getSize()), AsmSizeof::s_def, false));
+                    ///    asmFormat.Add(format);
+                    ///    ASM.Add(AsmOperation::asm_sub, rsp, new AsmImn("40"));
+                    ///    ASM.Add(AsmOperation::asm_call, new AsmInd("printf", AsmSizeof::s_def, false));
+                    ///    ASM.Add(AsmOperation::asm_add, rsp, new AsmImn("40"));
+                    ///}
                     continue;
                 }
                 if(!accept(Symbols::sys_string)) {
@@ -661,24 +746,24 @@ TreeNode *Parser::statement(bool ifFunc) {
                         //ERROR
                         error.printError(Errors::ERROR_BAD_TYPE, scanner.getLexem().pos, "");
                     } else {
-                        ASM.Add(AsmOperation::asm_mov, rcx, new AsmInd("format"+std::to_string(asmFormat.getSize()), AsmSizeof::s_def, false));
-                        if(((ExpressionNode*)ident)->convertType->type == DescriptorTypes::scalarInt) {
-                            format += "%d";
-                        } else if(((ExpressionNode*)ident)->convertType->type == DescriptorTypes::scalarFloat) {
-                            format += "%f";
-                        } else if(((ExpressionNode*)ident)->convertType->type == DescriptorTypes::scalarBoolean) {
-                            format += "%d";
-                        } else if(((ExpressionNode*)ident)->convertType->type == DescriptorTypes::scalarChar) {
-                            format += "%c";
-                        } else {
-                            format += "%d";
-                        }
-                        ASM.Add(AsmOperation::asm_pop, rdx);
-                        asmFormat.Add(format);
-                        ASM.Add(AsmOperation::asm_sub, rsp, new AsmImn("40"));
-                        ASM.Add(AsmOperation::asm_call, new AsmInd("printf", AsmSizeof::s_def, false));
-                        ASM.Add(AsmOperation::asm_add, rsp, new AsmImn("40"));
-                        format = "";
+                        ///ASM.Add(AsmOperation::asm_mov, rcx, new AsmInd("format"+std::to_string(asmFormat.getSize()), AsmSizeof::s_def, false));
+                        ///if(((ExpressionNode*)ident)->convertType->type == DescriptorTypes::scalarInt) {
+                        ///    format += "%d";
+                        ///} else if(((ExpressionNode*)ident)->convertType->type == DescriptorTypes::scalarFloat) {
+                        ///    format += "%f";
+                        ///} else if(((ExpressionNode*)ident)->convertType->type == DescriptorTypes::scalarBoolean) {
+                        ///    format += "%d";
+                        ///} else if(((ExpressionNode*)ident)->convertType->type == DescriptorTypes::scalarChar) {
+                        ///    format += "%c";
+                        ///} else {
+                        ///    format += "%d";
+                        ///}
+                        ///ASM.Add(AsmOperation::asm_pop, rdx);
+                        ///asmFormat.Add(format);
+                        ///ASM.Add(AsmOperation::asm_sub, rsp, new AsmImn("40"));
+                        ///ASM.Add(AsmOperation::asm_call, new AsmInd("printf", AsmSizeof::s_def, false));
+                        ///ASM.Add(AsmOperation::asm_add, rsp, new AsmImn("40"));
+                        ///format = "";
                         wr->children.push_back(ident);
                     }
                 } else {
@@ -687,6 +772,7 @@ TreeNode *Parser::statement(bool ifFunc) {
 			}
 			expect(Symbols::rpar);
 			scanner.getNextLexem();
+			///generateAsmCode(wr, ifFunc, true, false);
 			return wr;
 		} else if(lex == "read") {
 			ActionNode *rd = new ActionNode("READ");
@@ -707,28 +793,28 @@ TreeNode *Parser::statement(bool ifFunc) {
 				if(ident->id != (int)Symbols::ident && ident->id != (int)Symbols::at && ident->id != (int)Symbols::arrow) {
                     error.printError(Errors::ERROR_BAD_SYMBOL, scanner.getLexem().pos, "");
 				}
-				AsmOperand* shift = nullptr;
-                if(ident->nameLex == "^" || ident->nameLex == "@") {//need before expression
-                    if(___shift != 0) {
-                        ASM.Add(AsmOperation::asm_pop, r13);
-                        ___shift--;
-                        while(___shift != 0) {
-                            ASM.Add(AsmOperation::asm_pop, r13);
-                            ___shift--;
-                            ASM.Add(AsmOperation::asm_add, r13, r14);
-                        }
-                        shift = r13;
-                    }
-                } else if(___shift != 0) {
-                    ASM.Add(AsmOperation::asm_pop, r13);
-                    ___shift--;
-                    while(___shift != 0) {
-                        ASM.Add(AsmOperation::asm_pop, r14);
-                        ___shift--;
-                        ASM.Add(AsmOperation::asm_add, r13, r14);
-                    }
-                    shift = r13;
-                }
+				///AsmOperand* shift = nullptr;
+                ///if(ident->nameLex == "^" || ident->nameLex == "@") {//need before expression
+                ///    if(___shift != 0) {
+                ///        ASM.Add(AsmOperation::asm_pop, r13);
+                ///        ___shift--;
+                ///        while(___shift != 0) {
+                ///            ASM.Add(AsmOperation::asm_pop, r13);
+                ///            ___shift--;
+                ///            ASM.Add(AsmOperation::asm_add, r13, r14);
+                ///        }
+                ///        shift = r13;
+                ///    }
+                ///} else if(___shift != 0) {
+                ///    ASM.Add(AsmOperation::asm_pop, r13);
+                ///    ___shift--;
+                ///    while(___shift != 0) {
+                ///        ASM.Add(AsmOperation::asm_pop, r14);
+                ///        ___shift--;
+                ///        ASM.Add(AsmOperation::asm_add, r13, r14);
+                ///    }
+                ///    shift = r13;
+                ///}
 				if(ident->convertType->type != DescriptorTypes::scalarChar &&
                     ident->convertType->type != DescriptorTypes::scalarInt &&
 					ident->convertType->type != DescriptorTypes::scalarFloat &&
@@ -736,24 +822,24 @@ TreeNode *Parser::statement(bool ifFunc) {
 					//ERROR
 					error.printError(Errors::ERROR_BAD_TYPE, scanner.getLexem().pos, "");
 				} else {
-                    ASM.Add(AsmOperation::asm_mov, rcx, new AsmInd("format"+std::to_string(asmFormat.getSize()), AsmSizeof::s_def, false));
-                    if(((ExpressionNode*)ident)->convertType->type == DescriptorTypes::scalarInt) {
-                        format += "%d";
-                    } else if(((ExpressionNode*)ident)->convertType->type == DescriptorTypes::scalarFloat) {
-                        format += "%lf";
-                    } else if(((ExpressionNode*)ident)->convertType->type == DescriptorTypes::scalarBoolean) {
-                        format += "%d";
-                    } else if(((ExpressionNode*)ident)->convertType->type == DescriptorTypes::scalarChar) {
-                        format += "%c";
-                    } else {
-                        format += "%d";
-                    }
-                    ASM.Add(AsmOperation::asm_pop, rdx);
-                    asmFormat.Add(format);
-                    ASM.Add(AsmOperation::asm_sub, rsp, new AsmImn("40"));
-                    ASM.Add(AsmOperation::asm_call, new AsmInd("scanf", AsmSizeof::s_def, false));
-                    ASM.Add(AsmOperation::asm_add, rsp, new AsmImn("40"));
-                    format = "";
+                    ///ASM.Add(AsmOperation::asm_mov, rcx, new AsmInd("format"+std::to_string(asmFormat.getSize()), AsmSizeof::s_def, false));
+                    ///if(((ExpressionNode*)ident)->convertType->type == DescriptorTypes::scalarInt) {
+                    ///    format += "%d";
+                    ///} else if(((ExpressionNode*)ident)->convertType->type == DescriptorTypes::scalarFloat) {
+                    ///    format += "%lf";
+                    ///} else if(((ExpressionNode*)ident)->convertType->type == DescriptorTypes::scalarBoolean) {
+                    ///    format += "%d";
+                    ///} else if(((ExpressionNode*)ident)->convertType->type == DescriptorTypes::scalarChar) {
+                    ///    format += "%c";
+                    ///} else {
+                    ///    format += "%d";
+                    ///}
+                    ///ASM.Add(AsmOperation::asm_pop, rdx);
+                    ///asmFormat.Add(format);
+                    ///ASM.Add(AsmOperation::asm_sub, rsp, new AsmImn("40"));
+                    ///ASM.Add(AsmOperation::asm_call, new AsmInd("scanf", AsmSizeof::s_def, false));
+                    ///ASM.Add(AsmOperation::asm_add, rsp, new AsmImn("40"));
+                    ///format = "";
                     rd->children.push_back(ident);
                     ++i;
                 }
@@ -775,12 +861,11 @@ TreeNode *Parser::statement(bool ifFunc) {
 		if(accept(Symbols::semicolon)) {
 			if(scanner.getPrevLexem().val == (int)Symbols::rpar) {
 				scanner.getNextLexem();
-				if((ident->nameLex != "^" && ident->nameLex != "@") && ((VarNode*)ident)->type->_class == SymbolTypes::func) {
-                    ASM.Add(AsmOperation::asm_pop, rax);
-				} else if((ident->nameLex == "^" || ident->nameLex == "@") && ((VarNode*)(ident->children[0]))->type->_class == SymbolTypes::func) {
-                    ASM.Add(AsmOperation::asm_pop, rax);
-				}
-				//scanner.getNextLexem();
+				///if((ident->nameLex != "^" && ident->nameLex != "@") && ((VarNode*)ident)->type->_class == SymbolTypes::func) {
+                ///    ASM.Add(AsmOperation::asm_pop, rax);
+				///} else if((ident->nameLex == "^" || ident->nameLex == "@") && ((VarNode*)(ident->children[0]))->type->_class == SymbolTypes::func) {
+                ///    ASM.Add(AsmOperation::asm_pop, rax);
+				///}
 				return ident;
 			} else {
 				error.printError(Errors::ERROR_UNEXPECT_SYMBOL, scanner.getLexem().pos, "");
@@ -801,28 +886,28 @@ TreeNode *Parser::statement(bool ifFunc) {
 			scanner.getNextLexem();
 		}
 
-        AsmOperand* shift = nullptr;
-        if(ident->nameLex == "^" || ident->nameLex == "@") {//need before expression
-            if(___shift != 0) {
-                ASM.Add(AsmOperation::asm_pop, r13);
-                ___shift--;
-                while(___shift != 0) {
-                    ASM.Add(AsmOperation::asm_pop, r13);
-                    ___shift--;
-                    ASM.Add(AsmOperation::asm_add, r13, r14);
-                }
-                shift = r13;
-            }
-		} else if(___shift != 0) {
-            ASM.Add(AsmOperation::asm_pop, r13);
-            ___shift--;
-            while(___shift != 0) {
-                ASM.Add(AsmOperation::asm_pop, r14);
-                ___shift--;
-                ASM.Add(AsmOperation::asm_add, r13, r14);
-            }
-            shift = r13;
-        }
+        ///AsmOperand* shift = nullptr;
+        ///if(ident->nameLex == "^" || ident->nameLex == "@") {//need before expression
+        ///    if(___shift != 0) {
+        ///        ASM.Add(AsmOperation::asm_pop, r13);
+        ///        ___shift--;
+        ///        while(___shift != 0) {
+        ///            ASM.Add(AsmOperation::asm_pop, r13);
+        ///            ___shift--;
+        ///            ASM.Add(AsmOperation::asm_add, r13, r14);
+        ///        }
+        ///        shift = r13;
+        ///    }
+		///} else if(___shift != 0) {
+        ///    ASM.Add(AsmOperation::asm_pop, r13);
+        ///    ___shift--;
+        ///    while(___shift != 0) {
+        ///        ASM.Add(AsmOperation::asm_pop, r14);
+        ///        ___shift--;
+        ///        ASM.Add(AsmOperation::asm_add, r13, r14);
+        ///    }
+        ///    shift = r13;
+        ///}
 
 		BinOperationNode *eq = new BinOperationNode(scanner.getSymbolTypeStr(scanner.getLexem().type), scanner.getLexem());
 		scanner.getNextLexem();		ExpressionNode *expr = condition(ifFunc, true);//expression
@@ -843,16 +928,20 @@ TreeNode *Parser::statement(bool ifFunc) {
 		if( ident->nameLex == "@") {//
             ident = ((ExpressionNode*)ident->children[0]);
 		}
-		if(!ifFunc)
-            genAsmCodeForIdent(ident, expr, shift);
-		else
-            genAsmCodeForIdentFunc(ident, expr, shift);
+		///if(!ifFunc)
+        ///    genAsmCodeForIdent(ident, expr, shift);
+		///else
+        ///    genAsmCodeForIdentFunc(ident, expr, shift);
+        ///eq->generateAsm();
+        //generateAsmCode(eq, ifFunc, true, false);
         return eq;
-        } else
+        } else {
+            //generateAsmCode(ident, ifFunc, true, false);
+            //ident->generateAsm();
             return ident;
-
+        }
 	} else if (accept(Symbols::sys_begin)) {
-		BlockActionNode *ident = new BlockActionNode(scanner.getLexem().lexem);
+		BeginActionNode *ident = new BeginActionNode(scanner.getLexem().lexem);
 
 		scanner.getNextLexem();
 		if(accept(Symbols::semicolon)) {
@@ -871,7 +960,6 @@ TreeNode *Parser::statement(bool ifFunc) {
 
 		expect(Symbols::sys_end);
 		scanner.getNextLexem();
-		//std::cout << "!!!  " <<scanner.getLexem().lexem;
 		return ident;
 	} else if (accept(Symbols::sys_if)) {
 		return statementIf(ifFunc);
@@ -881,12 +969,18 @@ TreeNode *Parser::statement(bool ifFunc) {
 		return statementFor(ifFunc);
 	} else if (accept(Symbols::sys_repeat)) {
         return statementUntil(ifFunc);
+	} else if(accept(Symbols::sys_return)) {
+
+		ActionNode *ret = new ActionNode(scanner.getLexem().lexem);
+		///ASM.Add(AsmOperation::asm_jmp, new AsmMark("BREAK"+std::to_string(stackBreak.top()), false));
+		scanner.getNextLexem();
+		return ret;
 	} else if(accept(Symbols::sys_break)) {
 		if(stackBreak.size() == 0) {
 			error.printError(Errors::ERROR_BREAK, scanner.getLexem().pos, "");
 		}
 		BreakActionNode *br = new BreakActionNode(scanner.getLexem().lexem);
-		ASM.Add(AsmOperation::asm_jmp, new AsmMark("BREAK"+std::to_string(stackBreak.top()), false));
+		///ASM.Add(AsmOperation::asm_jmp, new AsmMark("BREAK"+std::to_string(stackBreak.top()), false));
 		scanner.getNextLexem();
 		return br;
 	} else if(accept(Symbols::sys_continue)) {
@@ -894,7 +988,7 @@ TreeNode *Parser::statement(bool ifFunc) {
 			error.printError(Errors::ERROR_BREAK, scanner.getLexem().pos, "");
 		}
 		ContinueActionNode *cn = new ContinueActionNode(scanner.getLexem().lexem);
-		ASM.Add(AsmOperation::asm_jmp, new AsmMark("CONTINUE"+std::to_string(stackBreak.top()), false));
+		///ASM.Add(AsmOperation::asm_jmp, new AsmMark("CONTINUE"+std::to_string(stackBreak.top()), false));
 		scanner.getNextLexem();
 		return cn;
 	} else {
