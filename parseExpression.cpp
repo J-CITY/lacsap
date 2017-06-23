@@ -163,15 +163,10 @@ ExpressionNode *Parser::getOrd(bool ifFunc, bool needAsm) {
                 //ERROR not legal var
                 error.printError(Errors::ERROR_BAD_TYPE, scanner.getLexem().pos, "");
             }
-            ///AsmOperand* shift = nullptr;
-            ///ASM.Add(AsmOperation::asm_push, new AsmInd("v_"+((VarNode*)ident)->nameLex, AsmSizeof::s_dq, true, shift));
         } else {
             ident = new CharLiteralNode(scanner.getSymbolTypeStr(scanner.getLexem().type), scanner.getLexem());
             ((CharLiteralNode*)ident)->type = baseTable->findInTable((std::string)"char")->type;
             ((CharLiteralNode*)ident)->convertType = ((CharLiteralNode*)ident)->type;
-            ///if(needAsm)
-            ///    ASM.Add(AsmOperation::asm_push, new AsmImn(scanner.getLexem().lexem));
-
             scanner.getNextLexem();
         }
         ord->children.push_back(ident);
@@ -316,227 +311,25 @@ ExpressionNode *Parser::factor(bool ifFunc, bool needAsm, bool ifRead = false) {
             return res;
 		}
 		res = getIdent(ifFunc, nullptr, false, needAsm);
-        ///res->ifFunc = ifFunc;///
-        ///AsmOperand* shift = nullptr;
-		///if(needAsm) {
-        ///    if(res->nameLex == "^" || res->nameLex == "@") {
-        ///        if(___shift != 0) {
-        ///            ASM.Add(AsmOperation::asm_pop, rax);
-        ///            ___shift--;
-        ///            while(___shift != 0) {
-        ///                ASM.Add(AsmOperation::asm_pop, rbx);
-        ///                ___shift--;
-        ///                ASM.Add(AsmOperation::asm_add, rax, rbx);
-        ///            }
-        ///            shift = rax;
-        ///        }
-        ///    } else if(___shift != 0) {
-        ///        ASM.Add(AsmOperation::asm_pop, rax);
-        ///        ___shift--;
-        ///        while(___shift != 0) {
-        ///            ASM.Add(AsmOperation::asm_pop, rbx);
-        ///            ___shift--;
-        ///            ASM.Add(AsmOperation::asm_add, rax, rbx);
-        ///        }
-        ///        shift = rax;
-        ///    }
-		///}
-        ///int mov = 0;
-        if(res->nameLex == "^") {
-            ///if(needAsm) {
-            ///    if(ifFunc) {
-            ///        if(symbolStack->get()->findInTable(((ExpressionNode*)res->children[0])->nameLex) != nullptr) {
-            ///            mov = symbolStack->get()->movInTable(((ExpressionNode*)res->children[0])->nameLex);
-            ///            //-
-            ///            ASM.Add(AsmOperation::asm_mov, rbx, rbp, AsmSizeof::s_def, false, nullptr, "", AsmSizeof::s_dq, true, shift, "-"+std::to_string(mov*8));
-            ///            //ASM.Add(AsmOperation::asm_mov, rbx, new AsmInd("rbp-"+std::to_string(mov*8), AsmSizeof::s_dq, true, shift));
-            ///            ASM.Add(AsmOperation::asm_push, rbx, AsmSizeof::s_dq, true);
-            ///        } else if(symbolStack->get()->parent->findInTable(((ExpressionNode*)res->children[0])->nameLex) != nullptr) {
-            ///            mov = symbolStack->get()->parent->movInTable(((ExpressionNode*)res->children[0])->nameLex);
-            ///            if(shift != nullptr)
-            ///                ASM.Add(AsmOperation::asm_imul, shift, new AsmImn("-1"));
-            ///            ASM.Add(AsmOperation::asm_mov, rbx, rbp, AsmSizeof::s_def, false, nullptr, "", AsmSizeof::s_dq, true, shift, "+"+std::to_string((mov+1)*8));
-            ///            //ASM.Add(AsmOperation::asm_mov, rbx, new AsmInd("rbp+8+"+std::to_string(mov*8), AsmSizeof::s_dq, true, shift));
-            ///            ASM.Add(AsmOperation::asm_push, rbx, AsmSizeof::s_dq, true);
-            ///        } else if(baseTable->findInTable(((ExpressionNode*)res->children[0])->nameLex) != nullptr) {
-            ///            ASM.Add(AsmOperation::asm_mov, rbx, new AsmInd("v_"+((ExpressionNode*)res->children[0])->nameLex, AsmSizeof::s_dq, true, shift));
-            ///            ASM.Add(AsmOperation::asm_push, rbx, AsmSizeof::s_dq, true);
-            ///        }
-            ///    } else {
-            ///        ASM.Add(AsmOperation::asm_mov, rbx, new AsmInd("v_"+((ExpressionNode*)res->children[0])->nameLex, AsmSizeof::s_dq, true, shift));//dq true
-            ///        ASM.Add(AsmOperation::asm_push, rbx, AsmSizeof::s_dq, true);
-            ///    }
-            ///}
+        /*if(res->nameLex == "^") {
         } else if(res->nameLex == "@") {
-            ///if(needAsm) {
-            ///    if(ifFunc) {
-            ///        if(symbolStack->get()->findInTable(((ExpressionNode*)res->children[0])->nameLex) != nullptr) {
-            ///            mov = symbolStack->get()->movInTable(((ExpressionNode*)res->children[0])->nameLex);
-            ///           if(((SymbolVar*)(((VarNode*)(res->children[0]))->type))->mot == MethodOfTransmission::paramvar) {
-            ///                ASM.Add(AsmOperation::asm_mov, rbx, rbp, AsmSizeof::s_def, false, nullptr, "", AsmSizeof::s_dq, true, shift,"-"+std::to_string(mov*8));
-            ///            } else {
-            ///                ASM.Add(AsmOperation::asm_lea, rbx, rbp, AsmSizeof::s_def, false, nullptr, "", AsmSizeof::s_def, true, shift,"-"+std::to_string(mov*8));
-            ///            }
-            ///
-            ///            //-
-            ///            //ASM.Add(AsmOperation::asm_lea, rbx, new AsmInd("rbp-"+std::to_string(mov*8), AsmSizeof::s_def, true, shift));
-            ///            //ASM.Add(AsmOperation::asm_lea, rbx, rbp, AsmSizeof::s_def, false, nullptr, "", AsmSizeof::s_def, true, shift,"-"+std::to_string(mov*8));
-            ///        } else if(symbolStack->get()->parent->findInTable(((ExpressionNode*)res->children[0])->nameLex) != nullptr) {
-            ///            mov = symbolStack->get()->parent->movInTable(((ExpressionNode*)res->children[0])->nameLex, false);
-            ///            if(shift != nullptr)
-            ///                ASM.Add(AsmOperation::asm_imul, shift, new AsmImn("-1"));
-            ///            if(((SymbolVar*)(((VarNode*)(res->children[0]))->type))->mot == MethodOfTransmission::paramvar) {
-            ///                ASM.Add(AsmOperation::asm_mov, rbx, rbp, AsmSizeof::s_def, false, nullptr, "", AsmSizeof::s_dq, true, shift, "+"+std::to_string((mov+1)*8));
-            ///            } else {
-            ///                ASM.Add(AsmOperation::asm_lea, rbx, rbp, AsmSizeof::s_def, false, nullptr, "", AsmSizeof::s_def, true, shift, "+"+std::to_string((mov+1)*8));
-            ///            }
-            ///            //ASM.Add(AsmOperation::asm_lea, rbx, rbp, AsmSizeof::s_def, false, nullptr, "", AsmSizeof::s_def, true, shift, "+"+std::to_string((mov+1)*8));
-            ///            //ASM.Add(AsmOperation::asm_lea, rbx, new AsmInd("rbp+8+"+std::to_string(mov*8), AsmSizeof::s_def, true, shift));
-            ///        } else if(baseTable->findInTable(((ExpressionNode*)res->children[0])->nameLex) != nullptr) {
-            ///            ASM.Add(AsmOperation::asm_lea, rbx, new AsmInd("v_"+((ExpressionNode*)res->children[0])->nameLex, AsmSizeof::s_def, true, shift));
-            ///        }
-            ///    } else {
-            ///        ASM.Add(AsmOperation::asm_lea, rbx, new AsmInd("v_"+((ExpressionNode*)res->children[0])->nameLex, AsmSizeof::s_def, true, shift));
-            ///    }
-            ///    ASM.Add(AsmOperation::asm_push, rbx);
-
-
-           /// }
         } else if(res->convertType->type == DescriptorTypes::pointer) {
-            ///if(needAsm) {
-            ///    if(res->nameLex == "nil") {
-            ///        ASM.Add(AsmOperation::asm_mov, rbx, new AsmInd("_"+res->nameLex, AsmSizeof::s_dq, true, shift));
-            ///    } else {
-            ///        if(ifFunc) {
-            ///            if(symbolStack->get()->findInTable(res->nameLex) != nullptr) {
-            ///                mov = symbolStack->get()->movInTable(res->nameLex);
-            ///                //-
-            ///                ASM.Add(AsmOperation::asm_mov, rbx, rbp, AsmSizeof::s_def, false, nullptr, "", AsmSizeof::s_dq, true, shift, "-"+std::to_string(mov*8));
-            ///            } else if(symbolStack->get()->parent->findInTable(res->nameLex) != nullptr) {
-            ///                mov = symbolStack->get()->parent->movInTable(res->nameLex, false);
-            ///                if(shift != nullptr)
-            ///                    ASM.Add(AsmOperation::asm_imul, shift, new AsmImn("-1"));
-            ///
-            ///                ASM.Add(AsmOperation::asm_mov, rbx, rbp, AsmSizeof::s_def, false, nullptr, "", AsmSizeof::s_dq, true, shift, "+"+std::to_string((mov+1)*8));
-            ///                //ASM.Add(AsmOperation::asm_mov, rbx, new AsmInd("rbp+8+"+std::to_string((mov+1)*8), AsmSizeof::s_dq, true, shift));
-            ///            } else if(baseTable->findInTable(res->nameLex) != nullptr) {
-            ///                ASM.Add(AsmOperation::asm_mov, rbx, new AsmInd("v_"+res->nameLex, AsmSizeof::s_dq, true, shift));
-            ///            }
-            ///        } else {
-            ///            ASM.Add(AsmOperation::asm_mov, rbx, new AsmInd("v_"+res->nameLex, AsmSizeof::s_dq, true, shift));//dq true
-            ///        }
-            ///    }
-            ///    ASM.Add(AsmOperation::asm_push, rbx);
-            ///}
         } else if(res->convertType->type == DescriptorTypes::scalarInt ||
             res->convertType->type == DescriptorTypes::scalarFloat ||
             res->convertType->type == DescriptorTypes::scalarChar ||
             res->convertType->type == DescriptorTypes::scalarBoolean && (res->nameLex != "true" && res->nameLex != "false" &&
                                                                          res->nameLex != "nil")) {
-            ///((VarNode*)res)->ifRead = ifRead;///
-            ///bool _mot = false;
-            ///if(needAsm && (((Symbol*)(((VarNode*)res)->type))->_class != SymbolTypes::func && ((Symbol*)(((VarNode*)res)->type))->_class != SymbolTypes::proc)) {
-            ///    SymbolVar *svar = nullptr;
-            ///    if(ifFunc) {
-            ///        if((svar = (SymbolVar*)(symbolStack->get()->findInTable(res->nameLex))) != nullptr) {
-            ///
-            ///            mov = symbolStack->get()->movInTable(res->nameLex);
-            ///            //-
-            ///           //std::cout << res->nameLex << " " <<(int)(((SymbolVar*)(((VarNode*)res)->type))->mot) << std::endl;
-            ///            if(mot == -1) {
-            ///                ASM.Add(AsmOperation::asm_lea, rbx, rbp, AsmSizeof::s_def, false, nullptr, "", AsmSizeof::s_def, true, shift, "-"+std::to_string(mov*8));
-            ///                        //new AsmInd("rbp-"+std::to_string(mov*8), AsmSizeof::s_def, true, shift));
-            ///            } else {
-            ///                if(ifRead) {
-            ///                    //ASM.Add(AsmOperation::asm_lea, rbx, new AsmInd("v_"+res->nameLex, AsmSizeof::s_def, true, shift));
-            ///                    ASM.Add(AsmOperation::asm_lea, rbx, rbp, AsmSizeof::s_def, false, nullptr, "", AsmSizeof::s_def, true, shift, "-"+std::to_string((mov)*8));
-            ///                 } else if( (((SymbolVar*)(((VarNode*)res)->type))->mot) == MethodOfTransmission::paramvar ) {
-            ///                    ASM.Add(AsmOperation::asm_mov, rbx, rbp, AsmSizeof::s_def, false, nullptr, "", AsmSizeof::s_dq, true, nullptr, "-"+std::to_string(mov*8));//shift
-            ///                    if(shift != nullptr)
-            ///                        ASM.Add(AsmOperation::asm_imul, shift, new AsmImn("-1"));
-            ///                    ASM.Add(AsmOperation::asm_push, rbx, AsmSizeof::s_dq, true, shift, "");
-            ///                    _mot = true;
-            ///                } else
-            ///                    ASM.Add(AsmOperation::asm_mov, rbx, rbp, AsmSizeof::s_def, false, nullptr, "", AsmSizeof::s_dq, true, shift, "-"+std::to_string(mov*8));
-            ///                //ASM.Add(AsmOperation::asm_mov, rbx, new AsmInd("rbp-"+std::to_string(mov*8), AsmSizeof::s_dq, true, shift));
-            ///            }
-            ///        } else if((svar = (SymbolVar*)(symbolStack->get()->parent->findInTable(res->nameLex))) != nullptr) {
-            ///            mov = symbolStack->get()->parent->movInTable(res->nameLex);
-            ///            //std::cout << res->nameLex << " " <<(int)(((SymbolVar*)(((VarNode*)res)->type))->mot) << std::endl;
-            ///            if(shift != nullptr)
-            ///                ASM.Add(AsmOperation::asm_imul, shift, new AsmImn("-1"));
-            ///            if(mot == -1) {
-            ///                ASM.Add(AsmOperation::asm_lea, rbx, rbp, AsmSizeof::s_def, false, nullptr, "", AsmSizeof::s_def, true, shift, "+"+std::to_string((mov+1)*8));
-            ///            } else {
-            ///                if(ifRead) {
-            ///                    //ASM.Add(AsmOperation::asm_lea, rbx, new AsmInd("v_"+res->nameLex, AsmSizeof::s_def, true, shift));
-            ///                    ASM.Add(AsmOperation::asm_lea, rbx, rbp, AsmSizeof::s_def, false, nullptr, "", AsmSizeof::s_def, true, shift, "+"+std::to_string((mov+1)*8));
-            ///                } else if( (((SymbolVar*)(((VarNode*)res)->type))->mot) == MethodOfTransmission::paramvar ) {
-            ///                    ASM.Add(AsmOperation::asm_mov, rbx, rbp, AsmSizeof::s_def, false, nullptr, "", AsmSizeof::s_dq, true, nullptr, "+"+std::to_string((mov+1)*8));//shift
-            ///                    if(shift != nullptr)
-            ///                        ASM.Add(AsmOperation::asm_imul, shift, new AsmImn("-1"));
-            ///                    _mot = true;
-            ///                    ASM.Add(AsmOperation::asm_push, rbx, AsmSizeof::s_dq, true, shift, "");
-            ///                } else
-            ///                    ASM.Add(AsmOperation::asm_mov, rbx, rbp, AsmSizeof::s_def, false, nullptr, "", AsmSizeof::s_dq, true, shift, "+"+std::to_string((mov+1)*8));
-            ///            }
-            ///        } else if((svar = (SymbolVar*)(baseTable->findInTable(res->nameLex))) != nullptr) {
-            ///
-            ///            if(mot == -1) {
-            ///                ASM.Add(AsmOperation::asm_lea, rbx, new AsmInd("v_"+res->nameLex, AsmSizeof::s_def, true, shift));
-            ///            } else {
-            ///                if(ifRead) {
-            ///                    ASM.Add(AsmOperation::asm_lea, rbx, new AsmInd("v_"+res->nameLex, AsmSizeof::s_def, true, shift));
-            ///                } else
-            ///                   ASM.Add(AsmOperation::asm_mov, rbx, new AsmInd("v_"+res->nameLex, AsmSizeof::s_dq, true, shift));
-            ///            }
-            ///        }
-            ///        //std::cout << mov << std::endl;
-            ///    } else {
-            ///        if(mot == -1 && !ifFunc) {
-            ///            ASM.Add(AsmOperation::asm_lea, rbx, new AsmInd("v_"+res->nameLex, AsmSizeof::s_def, true, shift));
-            ///        } else {
-            ///            if(ifRead) {
-            ///                ASM.Add(AsmOperation::asm_lea, rbx, new AsmInd("v_"+res->nameLex, AsmSizeof::s_def, true, shift));
-            ///            } else
-            ///                ASM.Add(AsmOperation::asm_mov, rbx, new AsmInd("v_"+res->nameLex, AsmSizeof::s_dq, true, shift));
-            ///        }
-            ///    }
-            ///    if(svar != nullptr) {
-            ///        mot = (int)(svar->mot);
-            ///        mot = (mot == 0) ? (1) : (-1);
-            ///    }
-            ///    if(mot == -1 && ifFunc && !_mot) {
-            ///        ASM.Add(AsmOperation::asm_push, rbx, AsmSizeof::s_dq, true);
-            ///    } else if(_mot){
-            ///        //ASM.Add(AsmOperation::asm_push, rbx, AsmSizeof::s_dq, true, shift, "");
-            ///    } else {
-            ///        ASM.Add(AsmOperation::asm_push, rbx);
-            ///    }
-            ///    mot = 0;
-            ///
-            ///    //if(array or record)
-            ///}
-		}
+		}*/
 
     } else if (accept(Symbols::intc)) {
 		res = new IntLiteralNode(scanner.getSymbolTypeStr(scanner.getLexem().type), scanner.getLexem());
 		((CharLiteralNode*)res)->type = baseTable->findInTable((std::string)"integer")->type;
 		((CharLiteralNode*)res)->convertType = ((CharLiteralNode*)res)->type;
-        if(needAsm) {
-            //ASM.Add(AsmOperation::asm_push, new AsmImn(scanner.getLexem().lexem));
-            ///((IntLiteralNode*)res)->generateAsm();
-        }
 		scanner.getNextLexem();
 	} else if (accept(Symbols::floatc)) {
 		res = new FloatLiteralNode(scanner.getSymbolTypeStr(scanner.getLexem().type), scanner.getLexem());
 		((CharLiteralNode*)res)->type = baseTable->findInTable((std::string)"real")->type;
 		((CharLiteralNode*)res)->convertType = ((CharLiteralNode*)res)->type;
-
-        if(needAsm) {
-            ///((FloatLiteralNode*)res)->generateAsm();
-        }
-
 		scanner.getNextLexem();
 	} else if (accept(Symbols::charc)) {
 		res = new CharLiteralNode(scanner.getSymbolTypeStr(scanner.getLexem().type), scanner.getLexem());
@@ -544,7 +337,6 @@ ExpressionNode *Parser::factor(bool ifFunc, bool needAsm, bool ifRead = false) {
 		((CharLiteralNode*)res)->convertType = ((CharLiteralNode*)res)->type;
 
 		if(needAsm) {
-            ///((CharLiteralNode*)res)->generateAsm();
             //ASM.Add(AsmOperation::asm_push, new AsmImn(std::to_string(scanner.getLexem().lexem[1])));
 		}
 		scanner.getNextLexem();
@@ -570,6 +362,137 @@ ExpressionNode *Parser::factor(bool ifFunc, bool needAsm, bool ifRead = false) {
 	return res;
 }
 
+ExpressionNode *Parser::getBracket(ExpressionNode *res, bool ifFunc, bool needAsm) {
+    unsigned int index = 0;
+    if(((VarNode*)res)->type->type->type != DescriptorTypes::arrays) {
+        //ERROR it is not array
+        error.printError(Errors::ERROR_EXPRESSION, scanner.getLexem().pos, "It is not array.");
+    }
+    ActionNode *op = new ActionNode("[]");
+    scanner.getNextLexem();
+    TreeNode *exp = expression(ifFunc, needAsm);
+    if(((DescriptorLimited*)(((DescriptorArray*)(((VarNode*)res)->type->type))->indices[index]))->baseType->type != ((ExpressionNode*)exp)->convertType->type) {
+        //ERROR unexpect type
+        error.printError(Errors::ERROR_BAD_TYPE, scanner.getLexem().pos, "");
+    }
+
+    op->children.push_back(exp);
+    while(accept(Symbols::comma)) {
+        scanner.getNextLexem();
+        exp = expression(ifFunc, needAsm);
+        index++;
+        if(((DescriptorArray*)(((VarNode*)res))->type->type)->indices.size() <= index) {
+            //ERROR big index
+            error.printError(Errors::ERROR_EXPRESSION, scanner.getLexem().pos, "Big index.");
+        }
+        if(((DescriptorLimited*)(((DescriptorArray*)(((VarNode*)res))->type->type)->indices[index]))->baseType->type!= ((ExpressionNode*)exp)->convertType->type) {
+            //ERROR unexpect type
+            error.printError(Errors::ERROR_BAD_TYPE, scanner.getLexem().pos, "");
+        }
+        op->children.push_back(exp);
+    }
+    expect(Symbols::rbracket);
+    scanner.getNextLexem();
+    //res->needAsm = needAsm;
+    res->children.push_back(op);
+    res->convertType = ((DescriptorArray*)(((VarNode*)res)->type->type))->baseType;
+    return res;
+}
+
+ExpressionNode *Parser::getPoint(ExpressionNode *res, bool ifFunc, bool needAsm, bool isArr) {
+    Descriptor *drec;
+    if(!isArr && ((VarNode*)res)->type->type->type != DescriptorTypes::records) {
+        //ERROR it is not record
+        error.printError(Errors::ERROR_EXPRESSION, scanner.getLexem().pos, "It is not a record.");
+    }
+    if(!isArr && ((VarNode*)res)->type->type->type == DescriptorTypes::records) {
+        drec = ((VarNode*)res)->type->type;
+    }
+    if(isArr && ((DescriptorArray*)(((VarNode*)res)->type->type))->baseType->type != DescriptorTypes::records) {
+        //ERROR it is not a array of record
+        error.printError(Errors::ERROR_EXPRESSION, scanner.getLexem().pos, "It is not a array of record.");
+    }
+    if(isArr && ((DescriptorArray*)(((VarNode*)res)->type->type))->baseType->type == DescriptorTypes::records) {
+        drec = ((DescriptorArray*)(((VarNode*)res)->type->type))->baseType;
+    }
+    ActionNode *op = new ActionNode(".");
+    scanner.getNextLexem();
+
+    ExpressionNode *id = getIdent(ifFunc, &drec, true, needAsm);
+
+    op->children.push_back(id);
+    res->children.push_back(op);
+    res->convertType = id->convertType;
+    return res;
+}
+
+ExpressionNode *Parser::getLpar(ExpressionNode *res, bool ifFunc, bool needAsm) {
+    if(((VarNode*)res)->type->_class != SymbolTypes::func && ((VarNode*)res)->type->_class != SymbolTypes::proc) {
+        //ERROR it is not func
+        error.printError(Errors::ERROR_EXPRESSION, scanner.getLexem().pos, "It is not a function.");
+    }
+    ActionNode *op = new ActionNode("func");
+    scanner.getNextLexem();
+    unsigned int inputParam = 1;
+    if(((VarNode*)res)->type->_class == SymbolTypes::proc)
+        inputParam = 0;
+    while(!accept(Symbols::rpar)) {
+        TreeNode *funcParam = condition(ifFunc, needAsm);
+
+        if(inputParam >= ((SymbolFunc*)(((VarNode*)res)->type))->inputParam->symbolsvec.size()) {
+            //ERRPR many arguments
+            error.printError(Errors::ERROR_EXPRESSION, scanner.getLexem().pos, "There is no function with such parameters.");
+        }
+        Descriptor *dres;
+        if(((SymbolVar*)((SymbolFunc*)(((VarNode*)res)->type))->inputParam->symbolsvec[inputParam])->mot == MethodOfTransmission::paramvar) {
+            dres = ((VarNode*)funcParam)->type->type;
+        } else {
+            dres = castSecontToFirst(((SymbolFunc*)(((VarNode*)res)->type))->inputParam->symbolsvec[inputParam]->type,
+                                        ((ExpressionNode*)funcParam)->convertType);
+        }
+        if(dres == nullptr) {
+            //ERROR
+            error.printError(Errors::ERROR_BAD_TYPE, scanner.getLexem().pos, "");
+        }
+        if(((SymbolFunc*)(((VarNode*)res)->type))->inputParam->symbolsvec[inputParam]->type->type != dres->type) {
+            //ERROR unexpect type
+            error.printError(Errors::ERROR_BAD_TYPE, scanner.getLexem().pos, "");
+        }
+        if(dres->type == DescriptorTypes::arrays && ((DescriptorArray*)dres)->isOpen == true) {//for open array
+            dres = ((ExpressionNode*)funcParam)->convertType;
+        }
+        ((ExpressionNode*)funcParam)->convertType = dres;
+        op->children.push_back(funcParam);
+        //for open array
+        if(((ExpressionNode*)funcParam)->convertType->type == DescriptorTypes::arrays) {
+            if(((DescriptorArray*)((SymbolFunc*)(((VarNode*)res)->type))->inputParam->symbolsvec[inputParam]->type)->isOpen) {
+                inputParam += ((DescriptorArray*)((SymbolFunc*)(((VarNode*)res)->type))->inputParam->symbolsvec[inputParam]->type)->indices.size();
+            }
+        }
+        inputParam++;
+
+
+        if(accept(Symbols::rpar)) {
+            break;
+        }
+        expect(Symbols::comma);
+        scanner.getNextLexem();
+    }
+    if(((SymbolFunc*)(((VarNode*)res)->type))->inputParam->symbolsvec.size() != inputParam) {
+        //ERROR not exist function with this params
+        //std::cout << inputParam << " "<<((SymbolFunc*)(((VarNode*)res)->type))->inputParam->symbolsvec.size();
+        error.printError(Errors::ERROR_EXPRESSION, scanner.getLexem().pos, "There is no function with such parameters.");
+    }
+    scanner.getNextLexem();
+    res->children.push_back(op);
+    if(((VarNode*)res)->type->_class == SymbolTypes::func) {
+        res->convertType = ((SymbolFunc*)(((VarNode*)res)->type))->returnParam->type;
+    } else {
+        res->convertType = nullptr;
+    }
+    return res;
+}
+
 ExpressionNode *Parser::getIdent(bool ifFunc, Descriptor **recordDescr, bool ifRecord, bool needAsm) {
 	UnarOperationNode *uoper = nullptr;
 	DescriptorPointers *dp = nullptr;
@@ -589,33 +512,23 @@ ExpressionNode *Parser::getIdent(bool ifFunc, Descriptor **recordDescr, bool ifR
         res = new VarNode("nil", scanner.getLexem());
         ((VarNode*)res)->type = baseTable->findInTable("nil");
         res->convertType = ((VarNode*)res)->type->type;
-
-        ///if(needAsm) {
-        ///    asmConstants.Add(res->nameLex);
-        ///}
         scanner.getNextLexem();
         return res;
 	}
-
 	if(scanner.getLexem().lexem == "true" || scanner.getLexem().lexem == "false") {
 		Symbol *sym = symbolStack->findInTables(scanner.getLexem().lexem);
 		DescriptorScalarBoolean *boolean = (DescriptorScalarBoolean*)baseTable->findInTable("boolean")->type;
 		if(sym->type->type == DescriptorTypes::scalarInt &&
 			(boolean->_true == sym || boolean->_false == sym)) {
-				res = new BoolLiteralNode(scanner.getSymbolTypeStr(scanner.getLexem().type), scanner.getLexem());
-				((CharLiteralNode*)res)->type = boolean;
-				((CharLiteralNode*)res)->convertType = boolean;
-
-				///if(needAsm) {
-                /// asmConstants.Add(res->nameLex);
-                /// ASM.Add(AsmOperation::asm_push, new AsmInd(asmConstants.Find(res->nameLex), AsmSizeof::s_dq, true));
-				///}
-				scanner.getNextLexem();
-				if(uoper != nullptr) {
-					error.printError(Errors::ERROR_UNEXPECT_SYMBOL, scanner.getLexem().pos, "");
-				}
-				return res;
-			}
+            res = new BoolLiteralNode(scanner.getSymbolTypeStr(scanner.getLexem().type), scanner.getLexem());
+            ((CharLiteralNode*)res)->type = boolean;
+            ((CharLiteralNode*)res)->convertType = boolean;
+            scanner.getNextLexem();
+            if(uoper != nullptr) {
+                error.printError(Errors::ERROR_UNEXPECT_SYMBOL, scanner.getLexem().pos, "");
+            }
+            return res;
+        }
 	}
 
 	res = new VarNode(scanner.getSymbolTypeStr(scanner.getLexem().type), scanner.getLexem());
@@ -636,11 +549,8 @@ ExpressionNode *Parser::getIdent(bool ifFunc, Descriptor **recordDescr, bool ifR
 		}
 	} else {
 		((VarNode*)res)->type = symbolStack->findInTables(scanner.getLexem().lexem);
-		//symbolStack->get()->parent->print(1);
-		//std::cout << scanner.getLexem().lexem << std::endl;
 		if(((VarNode*)res)->type == nullptr) {
 			//ERROR no find this ident
-			//std::cout << "!!!!\n";
 			error.printError(Errors::ERROR_EXPRESSION, scanner.getLexem().pos,
 				                 "Variable not found.");
 			}
@@ -656,221 +566,13 @@ ExpressionNode *Parser::getIdent(bool ifFunc, Descriptor **recordDescr, bool ifR
 	//for array
 	bool isArr = false;
 	if(accept(Symbols::lbracket)) {
-		isArr = true;
-		unsigned int index = 0;
-		if(((VarNode*)res)->type->type->type != DescriptorTypes::arrays) {
-			//ERROR it is not array
-			error.printError(Errors::ERROR_EXPRESSION, scanner.getLexem().pos, "It is not array.");
-		}
-		ActionNode *op = new ActionNode("[]");
-		scanner.getNextLexem();
-		TreeNode *exp = expression(ifFunc, needAsm);
-		if(((DescriptorLimited*)(((DescriptorArray*)(((VarNode*)res)->type->type))->indices[index]))->baseType->type != ((ExpressionNode*)exp)->convertType->type) {
-			//ERROR unexpect type
-			error.printError(Errors::ERROR_BAD_TYPE, scanner.getLexem().pos, "");
-		}
-
-		op->children.push_back(exp);
-		while(accept(Symbols::comma)) {
-			scanner.getNextLexem();
-			exp = expression(ifFunc, needAsm);
-			index++;
-			if(((DescriptorArray*)(((VarNode*)res))->type->type)->indices.size() <= index) {
-				//ERROR big index
-				error.printError(Errors::ERROR_EXPRESSION, scanner.getLexem().pos, "Big index.");
-			}
-			if(((DescriptorLimited*)(((DescriptorArray*)(((VarNode*)res))->type->type)->indices[index]))->baseType->type!= ((ExpressionNode*)exp)->convertType->type) {
-				//ERROR unexpect type
-				error.printError(Errors::ERROR_BAD_TYPE, scanner.getLexem().pos, "");
-			}
-			op->children.push_back(exp);
-		}
-		///if(needAsm) {
-        ///    ASM.Add(AsmOperation::asm_mov, rax, new AsmImn("1"));
-        ///    for(int i = 0; i < ((DescriptorArray*)((VarNode*)res)->type->type)->indices.size(); ++i) {
-        ///        ASM.Add(AsmOperation::asm_pop, rbx);
-        ///        if(!((DescriptorArray*)((VarNode*)res)->type->type)->isOpen) {
-        ///            ASM.Add(AsmOperation::asm_sub, rbx,
-        ///                    new AsmImn(((ExpressionNode*)((DescriptorLimited*)((DescriptorArray*)((VarNode*)res)->type->type)->indices[i])->_min)->nameLex));
-        ///        }
-        ///        ASM.Add(AsmOperation::asm_imul, rax, rbx);
-        ///    }
-        ///    ASM.Add(AsmOperation::asm_imul, rax, new AsmImn(getSize("", ((DescriptorArray*)(((VarNode*)res))->type->type)->baseType)));
-        ///    ASM.Add(AsmOperation::asm_push, rax);
-        ///    ___shift++;
-		///}
-		expect(Symbols::rbracket);
-		scanner.getNextLexem();
-		//res->needAsm = needAsm;
-		res->children.push_back(op);
-		res->convertType = ((DescriptorArray*)(((VarNode*)res)->type->type))->baseType;
+        isArr = true;
+        res = getBracket(res, ifFunc, needAsm);
 	}
 	if(accept(Symbols::point)) {
-        Descriptor *drec;
-		if(!isArr && ((VarNode*)res)->type->type->type != DescriptorTypes::records) {
-			//ERROR it is not record
-			error.printError(Errors::ERROR_EXPRESSION, scanner.getLexem().pos, "It is not a record.");
-		}
-		if(!isArr && ((VarNode*)res)->type->type->type == DescriptorTypes::records) {
-            drec = ((VarNode*)res)->type->type;
-		}
-		if(isArr && ((DescriptorArray*)(((VarNode*)res)->type->type))->baseType->type != DescriptorTypes::records) {
-			//ERROR it is not a array of record
-			error.printError(Errors::ERROR_EXPRESSION, scanner.getLexem().pos, "It is not a array of record.");
-		}
-		if(isArr && ((DescriptorArray*)(((VarNode*)res)->type->type))->baseType->type == DescriptorTypes::records) {
-            drec = ((DescriptorArray*)(((VarNode*)res)->type->type))->baseType;
-		}
-		ActionNode *op = new ActionNode(".");
-		scanner.getNextLexem();
-///////////////////
-        ///if(needAsm) {
-        ///    ASM.Add(AsmOperation::asm_mov, rax, new AsmImn("0"));
-        ///    for(unsigned int i = 0; i < ((DescriptorRecord*)(drec))->rName.size(); ++i) {
-        ///        if(scanner.getLexem().lexem == ((DescriptorRecord*)(drec))->rName[i]->lex.lexem) {
-        ///            break;
-        ///        }
-        ///        std::string _s;
-        ///        if(isArr && ((DescriptorArray*)(((VarNode*)res)->type->type))->baseType->type == DescriptorTypes::records) {
-        ///            _s = getSize("", ((DescriptorRecord*)(drec))->rName[i]->type);
-        ///        } else
-        ///            _s = getSize("", ((DescriptorRecord*)(drec))->rName[i]->type);
-        ///        ASM.Add(AsmOperation::asm_add, rax, new AsmImn(_s));
-        ///
-        ///    }
-        ///    ASM.Add(AsmOperation::asm_push, rax);
-        ///    ___shift++;
-        ///}
-/////////////////////////
-		ExpressionNode *id = getIdent(ifFunc, &drec, true, needAsm);
-
-		op->children.push_back(id);
-		res->children.push_back(op);
-		res->convertType = id->convertType;
-
+        res = getPoint(res, ifFunc, needAsm, isArr);
 	} else if(accept(Symbols::lpar)) {
-		if(((VarNode*)res)->type->_class != SymbolTypes::func && ((VarNode*)res)->type->_class != SymbolTypes::proc) {
-			//ERROR it is not func
-			error.printError(Errors::ERROR_EXPRESSION, scanner.getLexem().pos, "It is not a function.");
-		}
-		ActionNode *op = new ActionNode("func");
-		scanner.getNextLexem();
-		unsigned int inputParam = 1;
-		if(((VarNode*)res)->type->_class == SymbolTypes::proc)
-            inputParam = 0;
-        ///if(((VarNode*)res)->type->_class == SymbolTypes::func)
-        ///    ASM.Add(AsmOperation::asm_push, new AsmInd("0", AsmSizeof::s_def, false));
-        ///int popSz = 0;
-		while(!accept(Symbols::rpar)) {
-            ///if(((SymbolVar*)(((SymbolFunc*)(((VarNode*)res)->type))->inputParam->symbolsvec[inputParam]))->mot == MethodOfTransmission::paramval)
-            ///    mot = 1;
-            ///else
-            ///    mot = -1;
-			TreeNode *funcParam = condition(ifFunc, needAsm);
-
-			///if((((ExpressionNode*)funcParam)->convertType->type == DescriptorTypes::arrays ||
-            ///    ((ExpressionNode*)funcParam)->convertType->type == DescriptorTypes::records) && mot == 1) {
-            ///    popSz--;
-            ///    popSz += pushFuncParam(ifFunc, ((ExpressionNode*)funcParam)->nameLex, ((ExpressionNode*)funcParam)->convertType);
-			///} else if((((ExpressionNode*)funcParam)->convertType->type == DescriptorTypes::arrays ||
-            ///    ((ExpressionNode*)funcParam)->convertType->type == DescriptorTypes::records) && mot == -1) {
-			///    AsmOperand* shift = nullptr;
-            ///
-            ///    if(ifFunc) {
-            ///        int mov = 0;
-            ///        SymbolVar *svar = nullptr;
-            ///        if((svar = (SymbolVar*)(symbolStack->get()->findInTable(((ExpressionNode*)funcParam)->nameLex))) != nullptr) {
-            ///            mov = symbolStack->get()->movInTable(((ExpressionNode*)funcParam)->nameLex);
-            ///            //-
-            ///            ASM.Add(AsmOperation::asm_lea, rbx, rbp, AsmSizeof::s_def, false, nullptr, "", AsmSizeof::s_def, true, nullptr, "-"+std::to_string((mov)*8));
-            ///            //ASM.Add(AsmOperation::asm_lea, rbx, new AsmInd("rbp-"+std::to_string(mov*8), AsmSizeof::s_def, true));
-            ///
-            ///        } else if((svar = (SymbolVar*)(symbolStack->get()->parent->findInTable(((ExpressionNode*)funcParam)->nameLex))) != nullptr) {
-            ///            mov = symbolStack->get()->parent->movInTable(((ExpressionNode*)funcParam)->nameLex);
-            ///            if(shift != nullptr)
-            ///                ASM.Add(AsmOperation::asm_imul, shift, new AsmImn("-1"));
-            ///            ASM.Add(AsmOperation::asm_lea, rbx, rbp, AsmSizeof::s_def, false, nullptr, "", AsmSizeof::s_def, true, nullptr, "+"+std::to_string((mov+1)*8));
-            ///
-            ///            //ASM.Add(AsmOperation::asm_lea, rbx, new AsmInd("rbp+8+"+std::to_string(mov*8), AsmSizeof::s_def, true));
-            ///        } else if((svar = (SymbolVar*)(baseTable->findInTable(((ExpressionNode*)funcParam)->nameLex))) != nullptr) {
-            ///            ASM.Add(AsmOperation::asm_lea, rbx, new AsmInd("v_"+((ExpressionNode*)funcParam)->nameLex, AsmSizeof::s_def, true));
-            ///        }
-            ///    } else {
-            ///        ASM.Add(AsmOperation::asm_lea, rbx, new AsmInd("v_"+((ExpressionNode*)funcParam)->nameLex, AsmSizeof::s_def, true));
-            ///    }
-            ///    mot = 0;
-            ///    ASM.Add(AsmOperation::asm_push, rbx);
-			///}
-
-			if(inputParam >= ((SymbolFunc*)(((VarNode*)res)->type))->inputParam->symbolsvec.size()) {
-				//ERRPR many arguments
-				//std::cout << ((SymbolFunc*)(((VarNode*)res)->type))->inputParam->symbolsvec.size()<< "!!!!";
-				error.printError(Errors::ERROR_EXPRESSION, scanner.getLexem().pos, "There is no function with such parameters.");
-			}
-
-			Descriptor *dres;
-			if(((SymbolVar*)((SymbolFunc*)(((VarNode*)res)->type))->inputParam->symbolsvec[inputParam])->mot == MethodOfTransmission::paramvar) {
-                dres = ((VarNode*)funcParam)->type->type;
-			} else {
-			    dres = castSecontToFirst(((SymbolFunc*)(((VarNode*)res)->type))->inputParam->symbolsvec[inputParam]->type,
-                                         ((ExpressionNode*)funcParam)->convertType);
-			}
-			if(dres == nullptr) {
-				//ERROR
-
-				//std::cout << ((int)((SymbolVar*)((SymbolFunc*)(((VarNode*)res)->type))->inputParam->symbolsvec[inputParam])->mot) <<"!!!!\n";
-				error.printError(Errors::ERROR_BAD_TYPE, scanner.getLexem().pos, "");
-			}
-			if(((SymbolFunc*)(((VarNode*)res)->type))->inputParam->symbolsvec[inputParam]->type->type != dres->type) {
-				//ERROR unexpect type
-				error.printError(Errors::ERROR_BAD_TYPE, scanner.getLexem().pos, "");
-			}
-			if(dres->type == DescriptorTypes::arrays && ((DescriptorArray*)dres)->isOpen == true) {//for open array
-				dres = ((ExpressionNode*)funcParam)->convertType;
-			}
-			((ExpressionNode*)funcParam)->convertType = dres;
-			op->children.push_back(funcParam);
-			//for open array
-			if(((ExpressionNode*)funcParam)->convertType->type == DescriptorTypes::arrays) {
-                if(((DescriptorArray*)((SymbolFunc*)(((VarNode*)res)->type))->inputParam->symbolsvec[inputParam]->type)->isOpen) {
-                    inputParam += ((DescriptorArray*)((SymbolFunc*)(((VarNode*)res)->type))->inputParam->symbolsvec[inputParam]->type)->indices.size();
-                }
-			}
-			inputParam++;
-
-
-			if(accept(Symbols::rpar)) {
-				break;
-			}
-			expect(Symbols::comma);
-			scanner.getNextLexem();
-
-		}
-		if(((SymbolFunc*)(((VarNode*)res)->type))->inputParam->symbolsvec.size() != inputParam) {
-			//ERROR not exist function with this params
-			//std::cout << inputParam << " "<<((SymbolFunc*)(((VarNode*)res)->type))->inputParam->symbolsvec.size();
-			error.printError(Errors::ERROR_EXPRESSION, scanner.getLexem().pos, "There is no function with such parameters.");
-		}
-		scanner.getNextLexem();
-		res->children.push_back(op);
-
-        ///ASM.Add("call " + (((VarNode*)res)->nameLex));
-
-        ///int _to = 0;
-        ///if(((VarNode*)res)->type->_class == SymbolTypes::proc) {
-        ///    _to = inputParam + popSz;
-        ///} else {
-        ///    _to = inputParam + popSz - 1;
-        ///}
-        ///for(int k = 0; k < _to; ++k) {
-        ///    ASM.Add(AsmOperation::asm_pop, rbx);
-        ///}
-
-		if(((VarNode*)res)->type->_class == SymbolTypes::func) {
-			res->convertType = ((SymbolFunc*)(((VarNode*)res)->type))->returnParam->type;
-		} else {
-			res->convertType = nullptr;
-		}
+		res = getLpar(res, ifFunc, needAsm);
 	} else if(accept(Symbols::arrow)) {
 		if(((VarNode*)res)->type->type->type == DescriptorTypes::pointer) {
 			ExpressionNode *op = new ExpressionNode("^", scanner.getLexem());
@@ -893,46 +595,6 @@ ExpressionNode *Parser::getIdent(bool ifFunc, Descriptor **recordDescr, bool ifR
 		res = uoper;
 	}
 	return res;
-}
-
-AsmOperation getAsmOper(int in, int type = 0) {
-    if(in == (int)Symbols::star) {
-        return (type == 0) ? AsmOperation::asm_imul : AsmOperation::asm_mulsd;
-    } else if(in == (int)Symbols::slash) {
-        return AsmOperation::asm_divsd;
-    } else if(in == (int)Symbols::plus) {
-        return (type == 0) ? AsmOperation::asm_add : AsmOperation::asm_addsd;
-    } else if(in == (int)Symbols::minus) {
-        return (type == 0) ? AsmOperation::asm_sub : AsmOperation::asm_subsd;
-    } else if(in == (int)Symbols::sys_xor) {
-        return AsmOperation::asm_xor;
-    } else if(in == (int)Symbols::sys_or) {
-        return AsmOperation::asm_or;
-    } else if(in == (int)Symbols::sys_and) {
-        return AsmOperation::asm_and;
-    } else if(in == (int)Symbols::sys_not) {
-        return AsmOperation::asm_not;
-    } else if(in == (int)Symbols::sys_div) {
-        return AsmOperation::asm_idiv;
-    } else if(in == (int)Symbols::sys_mod) {
-        return AsmOperation::asm_idiv;
-    } else if(in == (int)Symbols::sys_shl) {
-        return AsmOperation::asm_sal;
-    } else if(in == (int)Symbols::sys_shr) {
-        return AsmOperation::asm_sar;
-    } else if(in == (int)Symbols::equal) {
-        return AsmOperation::asm_jz;
-    } else if(in == (int)Symbols::latergreater) {//<>
-        return AsmOperation::asm_jnz;
-    } else if(in == (int)Symbols::laterequal) {//<=
-        return AsmOperation::asm_jle;
-    } else if(in == (int)Symbols::greaterequal) {//>=
-        return AsmOperation::asm_jge;
-    } else if(in == (int)Symbols::later) {
-        return AsmOperation::asm_jl;
-    } else if(in == (int)Symbols::greater) {
-        return AsmOperation::asm_jg;
-    }
 }
 
 ExpressionNode *Parser::term(bool ifFunc, bool needAsm) {
@@ -983,9 +645,6 @@ ExpressionNode *Parser::term(bool ifFunc, bool needAsm) {
 		if(oper->id == (int)Symbols::slash) {
             oper->convertType = baseTable->findInTable("real")->type;
 		}
-		///if(needAsm) {
-        ///    oper->generateAsm();
-		///}
 		fres = oper;
 		f = nullptr;
 		oper = nullptr;
@@ -1019,10 +678,6 @@ ExpressionNode *Parser::expression(bool ifFunc, bool needAsm) {
 		uoper->children.push_back(tnres);
 		uoper->convertType = tnres->convertType;
 		tnres = uoper;
-		///if(needAsm) {
-        ///    uoper->generateAsm();
-		///}
-
 	}
 	ExpressionNode *tn = nullptr;
 	BinOperationNode *oper = nullptr;
@@ -1056,9 +711,6 @@ ExpressionNode *Parser::expression(bool ifFunc, bool needAsm) {
 			}
 		}
 		oper->convertType = cast(tnres->convertType, tn->convertType);
-        ///if(needAsm) {
-        ///    oper->generateAsm();
-        ///}
 		tnres = oper;
 		oper = nullptr;
 		tn = nullptr;
@@ -1099,52 +751,9 @@ ExpressionNode *Parser::condition(bool ifFunc, bool needAsm) {
         op->children.push_back(expr0);
         op->children.push_back(expr1);
         op->convertType = baseTable->findInTable("boolean")->type;
-        ///if(needAsm) {
-        ///    op->generateAsm();
-        ///}
         expr0 = op;
         op = nullptr;
         expr1 = nullptr;
 	}
 	return expr0;
-}
-
-void generateAsmCode(TreeNode *root, bool ifFunc, bool needAsm, bool ifRead) {
-
-    //std::cout << ((ExpressionNode*)root)->nameNode<< "!!\n";
-    if(root->nameNode == "operation") {
-        if(((ExpressionNode*)root)->nameLex == ":=") {
-            root->generateAsm(ifFunc, needAsm);
-            return;
-        }
-        //std::cout << root->children[0]->nameNode << "\n";
-        //std::cout << root->children[1]->nameNode << "\n";
-        generateAsmCode(root->children[0], ifFunc, needAsm, ifRead);
-        generateAsmCode(root->children[1], ifFunc, needAsm, ifRead);
-        root->generateAsm(ifFunc, needAsm);
-        return;
-    } else if(root->nameNode == "uoperation" || root->nameNode == "^") {
-        if(((ExpressionNode*)root)->nameLex == "@") {
-            root->generateAsm(ifFunc, needAsm);
-            ((VarNode*)root->children[0])->generateAsmFactor(ifFunc, needAsm, ifRead, true);
-            return;
-        } else if(((ExpressionNode*)root)->nameLex == "^") {
-            root->generateAsm(ifFunc, needAsm);
-            ((VarNode*)root->children[0])->generateAsmFactor(ifFunc, needAsm, ifRead, true);
-            return;
-        }
-        generateAsmCode(root->children[0], ifFunc, needAsm, ifRead);
-        root->generateAsm(ifFunc, needAsm);
-    } else if(root->nameNode == "identifier" || root->nameNode == "nil" || root->nameNode == "RANDOM"
-              || root->nameNode == "GETCH") {
-        //std::cout << ((VarNode*)root)->nameLex << "\n";
-        ((VarNode*)root)->generateAsmFactor(ifFunc, needAsm, ifRead);
-        //((VarNode*)root)->generateAsmFactor(ifFunc, needAsm, ifRead);
-    } else if(root->nameNode == "ORD" || root->nameNode == "CHR") {
-        generateAsmCode(root->children[0], ifFunc, needAsm, ifRead);
-        return;
-    } else {
-        root->generateAsm(ifFunc, needAsm);
-        return;
-    }
 }

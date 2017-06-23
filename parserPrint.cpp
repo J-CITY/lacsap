@@ -189,3 +189,66 @@ void printTree(TreeNode *root, int l, int rot) {
 		}
 	}
 }
+
+void ActionNode::print(int l) {
+    std::cout << nameNode;
+}
+
+void StringNode::print(int l) {
+    std::cout << nameLex << ":" << nameNode;
+}
+
+void ProgramNode::print(int l) {
+    std::cout << nameNode << " : " << nameLex << "\n";
+    type->localParam->print(l);
+}
+
+void ExpressionNode::print(int l) {
+    std::cout << nameLex << ":" << nameNode <<"{";
+    if(convertType != nullptr) {
+        convertType->print(l);
+    }
+    std::cout << "}";
+}
+
+void Parser::print() {
+	baseTable->print(0);
+	printTree(root, 0, 0);
+}
+
+void Parser::printAsm() {
+    ASMOther.print();
+    ASM.print();
+    asmFormat.print();
+    asmConstants.print();
+}
+
+void DescriptorPointers::print(int l) {
+    std::cout << "pointer ";
+    if(baseType != nullptr) {
+        baseType->print(l);
+    } else {
+        std::cout << "nil ";
+    }
+}
+
+void DescriptorReferences::print(int l) {
+    std::cout << "reference\n";
+    baseType->print(l);
+}
+
+void DescriptorScalarBoolean::print(int l) {
+    std::cout << "boolean " << "{" << _true->lex.lexem << " " << _false->lex.lexem << "}";
+}
+
+void DescriptorScalarChar::print(int l) {
+    std::cout << "char";
+}
+
+void DescriptorScalarFloat::print(int l) {
+    std::cout << "real";
+}
+
+void DescriptorScalarInt::print(int l) {
+    std::cout << "integer";
+}

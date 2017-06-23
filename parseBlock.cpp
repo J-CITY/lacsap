@@ -1,5 +1,4 @@
 #include "parser.h"
-//std::vector<int> popLimPos;
 
 Descriptor *Parser::getArrLimit() {
     ExpressionNode *from = expression(false, false);
@@ -8,9 +7,6 @@ Descriptor *Parser::getArrLimit() {
     scanner.getNextLexem();
     ExpressionNode *to = expression(false, false);
     to = Calculate(to);
-
-    //popLimPos.push_back(ASM.asmcode.size());
-
     if(((VarNode*)from)->convertType->type != DescriptorTypes::scalarInt ||
         ((VarNode*)to)->convertType->type != DescriptorTypes::scalarInt) {
         //ERROR
@@ -31,7 +27,6 @@ std::vector<SymbolVar*> Parser::getVarBlock(int ifFunc, SymbolTable *st, bool fo
         if(accept(Symbols::sys_var)) {
             mot = MethodOfTransmission::paramvar;
             scanner.getNextLexem();
-            //forFunc = false;
         }
     }
 	do {
@@ -81,38 +76,6 @@ std::vector<SymbolVar*> Parser::getVarBlock(int ifFunc, SymbolTable *st, bool fo
             break;
         }
 	}
-
-	///if(ifFunc > 0) {
-    ///    int _sz = std::stoi(getSize("", result[0]->type));
-    ///    int stackSub = 0;
-    ///    for(int i = 0; i < result.size(); ++i) {
-    ///        if(result[i]->mot == MethodOfTransmission::paramvar) {
-    ///                stackSub += 8;
-    ///        ASM.Add(AsmOperation::asm_push, new AsmInd("0", AsmSizeof::s_def, false));
-    ///        } else {
-    ///            for(int j = 0; j < _sz; ++j) {
-    ///                stackSub += 8;
-    ///                ASM.Add(AsmOperation::asm_push, new AsmInd("0", AsmSizeof::s_def, false));
-    ///            }
-    ///        }
-    ///    }
-    ///}
-
-	///if(!ifRecord && !ifFunc)
-	///for(unsigned int i = 0; i < idents.size(); ++i) {
-	///	std::string _t = genAsmDerective(descr);
-	///	if(descr->type == DescriptorTypes::arrays && !((DescriptorArray*)descr)->isOpen) {
-    ///        _t = "v_" + idents[i].lexem + ": " + " times " + getSize(result[i]->lex.lexem, descr) +" "+ _t + " " + "0";
-    ///        ASMOther.Add(_t);
-    ///    } else if(descr->type == DescriptorTypes::records) {
-    ///        _t = "v_" + idents[i].lexem + ": " + " times " + getSize(result[i]->lex.lexem, descr) +" "+ _t + " " + "0";
-    ///        ASMOther.Add(_t);
-    ///    } else {
-    ///        _t = "v_" + idents[i].lexem + ": " + _t + " " + "0";
-    ///        ASMOther.Add(_t);
-    ///    }
-	///}
-
 	return result;
 }
 
@@ -149,7 +112,6 @@ std::string getSize(std::string name="", Descriptor* descr=nullptr) {
     }
     return "";
 }
-
 
 Descriptor *Parser::getType(SymbolTable *st, bool forFunc = false) {
     DescriptorArray *arr = nullptr;
@@ -225,290 +187,251 @@ Descriptor *Parser::getType(SymbolTable *st, bool forFunc = false) {
 TreeNode *Parser::block(bool ifFunc, SymbolTable *st) {
 	TreeNode *blockNode = new BlockActionNode("BLOCK");
 	symbolStack->push(st);
-
 	while(1){
-	if (accept(Symbols::sys_const)) {
-        if(!ifFunc)
-            ASMOther.Add("section", ".const");
-		scanner.getNextLexem();
-		if(accept(Symbols::ident)) {
-			do {
-				expect(Symbols::ident);
-				Lexem identLex = scanner.getLexem();
+        if (accept(Symbols::sys_const)) {
+            if(!ifFunc)
+                ASMOther.Add("section", ".const");
+            scanner.getNextLexem();
+            if(accept(Symbols::ident)) {
+                do {
+                    expect(Symbols::ident);
+                    Lexem identLex = scanner.getLexem();
 
-				Symbol *identSymbol = nullptr;
-				identSymbol = symbolStack->symbolTable->findInTable(identLex.lexem);
-				if(identSymbol != nullptr) {
-					//ERROR alredy exist
-					error.printError(Errors::ERROR_VAR_ALREADY_EXIST, scanner.getLexem().pos, "");
-				}
+                    Symbol *identSymbol = nullptr;
+                    identSymbol = symbolStack->symbolTable->findInTable(identLex.lexem);
+                    if(identSymbol != nullptr) {
+                        //ERROR alredy exist
+                        error.printError(Errors::ERROR_VAR_ALREADY_EXIST, scanner.getLexem().pos, "");
+                    }
+                    scanner.getNextLexem();
+                    expect(Symbols::equal);
+                    scanner.getNextLexem();
 
-				scanner.getNextLexem();
-				expect(Symbols::equal);
-				scanner.getNextLexem();
+                    Descriptor *type = nullptr;
 
-				Descriptor *type = nullptr;
+                    TreeNode *expr = condition(ifFunc, false);
+                    expr = Calculate((ExpressionNode*)expr);
 
-				TreeNode *expr = condition(ifFunc, false);
-				expr = Calculate((ExpressionNode*)expr);
+                    if(accept(Symbols::colon)) {
+                        scanner.getNextLexem();
+                        expect(Symbols::ident);
+                        Lexem typeLex = scanner.getLexem();
+                        Symbol *typeSymbol = symbolStack->findInTables(typeLex.lexem);
+                        if(typeSymbol == nullptr) {
+                            //ERROR it is not a type
+                            error.printError(Errors::ERROR_BAD_TYPE, scanner.getLexem().pos, "It is not a type.");
+                        }
+                        if(typeSymbol->_class == SymbolTypes::types) {
+                            type = typeSymbol->type;
+                        } else {
+                            //ERROR it is not a type
+                            error.printError(Errors::ERROR_BAD_TYPE, scanner.getLexem().pos, "It is not a type.");
+                        }
+                        scanner.getNextLexem();
+                    } else {
+                        type = ((VarNode*)expr)->convertType;
+                    }
+                    std::string _t = genAsmDerective(type);
+                    _t = "v_" + identLex.lexem + ": " + _t + " " + ((ExpressionNode*)expr)->nameLex;
+                    ASMOther.Add(_t, 0);
+                    SymbolConst *ident = new SymbolConst(identLex, expr, type);
+                    st->add(ident);//add new constant
+                    expect(Symbols::semicolon);
+                    scanner.getNextLexem();
+                } while (accept(Symbols::ident));
+            }
+            continue;
+        }
+        if (accept(Symbols::sys_var)) {
+            scanner.getNextLexem();
+            do {
+                std::vector<SymbolVar*> r = getVarBlock(ifFunc, st, false);
+                for(unsigned int i = 0; i < r.size(); ++i) {
+                    if(st->findInTable(r[i]->lex.lexem) != nullptr) {
+                        error.printError(Errors::ERROR_VAR_ALREADY_EXIST, scanner.getLexem().pos, "");
+                    }
+                    st->add(r[i]);
+                }
+            } while(accept(Symbols::ident));
+            continue;
+        }
+        if (accept(Symbols::sys_type)) {
+            SymbolType *symbolType = nullptr;
+            scanner.getNextLexem();
+            do {
+                expect(Symbols::ident);
+                symbolType = new SymbolType();
+                symbolType->lex = scanner.getLexem();
+                scanner.getNextLexem();
+                expect(Symbols::equal);
+                scanner.getNextLexem();
 
-				if(accept(Symbols::colon)) {
-					scanner.getNextLexem();
-					expect(Symbols::ident);
-					Lexem typeLex = scanner.getLexem();
-					Symbol *typeSymbol = symbolStack->findInTables(typeLex.lexem);
-					if(typeSymbol == nullptr) {
-						//ERROR it is not a type
-						error.printError(Errors::ERROR_BAD_TYPE, scanner.getLexem().pos, "It is not a type.");
-					}
-					if(typeSymbol->_class == SymbolTypes::types) {
-						type = typeSymbol->type;
-					} else {
-						//ERROR it is not a type
-						error.printError(Errors::ERROR_BAD_TYPE, scanner.getLexem().pos, "It is not a type.");
-					}
-					scanner.getNextLexem();
-				} else {
-					type = ((VarNode*)expr)->convertType;
-				}
+                symbolType->type = getType(st);
 
-                std::string _t = genAsmDerective(type);
+                scanner.getNextLexem();
+                expect(Symbols::semicolon);
+                scanner.getNextLexem();
+                st->add(symbolType);
+            } while (accept(Symbols::ident));
+            continue;
+        }
+        if(accept(Symbols::sys_function)) {
+            FuncNode *funcNode;
+            SymbolFunc *func = new SymbolFunc();
+            func->type = nullptr;
+            scanner.getNextLexem();
 
-				_t = "v_" + identLex.lexem + ": " + _t + " " + ((ExpressionNode*)expr)->nameLex;
-                ASMOther.Add(_t);
-                //ASM.Add(AsmOperation::asm_pop, new AsmInd("v_"+identLex.lexem, AsmSizeof::s_dq, true, nullptr));
+            if(expect(Symbols::ident)) {
+                funcNode = new FuncNode(scanner.getLexem());
+                func->lex = scanner.getLexem();
+                scanner.getNextLexem();
+            }
 
-				SymbolConst *ident = new SymbolConst(identLex, expr, type);
-				st->add(ident);//add new constant
-				expect(Symbols::semicolon);
-				scanner.getNextLexem();
-			} while (accept(Symbols::ident));
-		}
-		continue;
-	}
-	if (accept(Symbols::sys_var)) {
+            st->add(func);
+            expect(Symbols::lpar);
+            scanner.getNextLexem();
+            if(!accept(Symbols::rpar))
+            do {
+                std::vector<SymbolVar*> r = getVarBlock(-1, st,  true);
+                for(unsigned int i = 0; i < r.size(); ++i) {
+                    if(func->inputParam->findInTable(r[i]->lex.lexem) != nullptr) {
+                        error.printError(Errors::ERROR_VAR_ALREADY_EXIST, scanner.getLexem().pos, "");
+                    }
+                    func->inputParam->add(r[i]);
+                    if(r[i]->type->type == DescriptorTypes::arrays) {
+                        if(((DescriptorArray*)r[i]->type)->isOpen) {
+                            for(int y = 0; y < ((DescriptorArray*)r[i]->type)->indices.size(); y++) {
+                                SymbolVar *svar = new SymbolVar();
+                                TextPos pos;
+                                Lexem _lex((std::string)(r[i]->lex.lexem+"size"+std::to_string(y)),
+                                            (TextPos)pos, (int)Symbols::intc, (int)literalint);
 
-		scanner.getNextLexem();
-		do {
-			std::vector<SymbolVar*> r = getVarBlock(ifFunc, st, false);
-			for(unsigned int i = 0; i < r.size(); ++i) {
-				if(st->findInTable(r[i]->lex.lexem) != nullptr) {
-					error.printError(Errors::ERROR_VAR_ALREADY_EXIST, scanner.getLexem().pos, "");
-				}
-				st->add(r[i]);
-			}
-		} while(accept(Symbols::ident));
-		continue;
-	}
-	if (accept(Symbols::sys_type)) {
-		SymbolType *symbolType = nullptr;
-		scanner.getNextLexem();
-		do {
-			expect(Symbols::ident);
-			symbolType = new SymbolType();
-			symbolType->lex = scanner.getLexem();
-			scanner.getNextLexem();
-			expect(Symbols::equal);
-			scanner.getNextLexem();
-
-			symbolType->type = getType(st);
-
+                                svar->lex = _lex;
+                                svar->mot = MethodOfTransmission::paramval;
+                                svar->_class = SymbolTypes::vars;
+                                svar->type = baseTable->findInTable("integer")->type;
+                                func->inputParam->add(svar);
+                            }
+                        }
+                    }
+                }
+                if(accept(Symbols::semicolon)) {
+                    scanner.getNextLexem();
+                    if(!accept(Symbols::ident) && !accept(Symbols::sys_var)) {
+                        error.printError(Errors::ERROR_EXPRESSION, scanner.getLexem().pos, "Expected identifier.");
+                    }
+                }
+            } while(accept(Symbols::ident) || accept(Symbols::sys_var));
+            expect(Symbols::rpar);
+            scanner.getNextLexem();
+            expect(Symbols::colon);
+            scanner.getNextLexem();
+            expect(Symbols::ident);
+            Symbol *typeSymbol = symbolStack->findInTables(scanner.getLexem().lexem);
+            if(typeSymbol == nullptr) {
+                //ERROR it is not a type
+                error.printError(Errors::ERROR_BAD_TYPE, scanner.getLexem().pos, "It is not a type.");
+            }
+            if(typeSymbol->_class == SymbolTypes::types) {
+                func->returnParam = (SymbolType*)typeSymbol;
+                    //std::cout <<"func " << (int)(func->returnParam->type->type);
+                func->type = func->returnParam->type;
+            } else {
+                //ERROR it is not a type
+                error.printError(Errors::ERROR_BAD_TYPE, scanner.getLexem().pos, "It is not a type.");
+            }
             scanner.getNextLexem();
             expect(Symbols::semicolon);
             scanner.getNextLexem();
-            st->add(symbolType);
-		 } while (accept(Symbols::ident));
-		continue;
-	}
-	if(accept(Symbols::sys_function)) {
-		FuncNode *funcNode;
-		SymbolFunc *func = new SymbolFunc();
-		func->type = nullptr;
-		scanner.getNextLexem();
+            //symbolStack->push(func->inputParam);
+            SymbolTable *st = new SymbolTable();
+            SymbolVar *result = new SymbolVar();
+            TextPos pos;
+            Lexem resultlex("result", pos, (int)Symbols::ident,identifier);
+            result->lex = resultlex;
+            result->type = func->type;
 
-		if(expect(Symbols::ident)) {
-			funcNode = new FuncNode(scanner.getLexem());
-			func->lex = scanner.getLexem();
-			scanner.getNextLexem();
-		}
-        ///ASMOther.Add("section", ".text");
-		///ASM.Add(func->lex.lexem+":");
-		///ASM.Add("push rbp");
-		///ASM.Add("mov rbp, rsp");
+            func->inputParam->addFront(result);
+            //st->add(result);
+            symbolStack->push(func->inputParam);
 
-		st->add(func);
-		expect(Symbols::lpar);
-        scanner.getNextLexem();
-        if(!accept(Symbols::rpar))
-		do {
- 			std::vector<SymbolVar*> r = getVarBlock(-1, st,  true);
-			for(unsigned int i = 0; i < r.size(); ++i) {
-				if(func->inputParam->findInTable(r[i]->lex.lexem) != nullptr) {
-					error.printError(Errors::ERROR_VAR_ALREADY_EXIST, scanner.getLexem().pos, "");
-				}
-				func->inputParam->add(r[i]);
-				if(r[i]->type->type == DescriptorTypes::arrays) {
-                    if(((DescriptorArray*)r[i]->type)->isOpen) {
-                        for(int y = 0; y < ((DescriptorArray*)r[i]->type)->indices.size(); y++) {
-                            SymbolVar *svar = new SymbolVar();
-                            TextPos pos;
-                            Lexem _lex((std::string)(r[i]->lex.lexem+"size"+std::to_string(y)),
-                                          (TextPos)pos, (int)Symbols::intc, (int)literalint);
+            func->block = block(true, st);
+            func->localParam = st;
+            expect(Symbols::semicolon);
+            scanner.getNextLexem();
+            funcNode->type = func;
+            blockNode->children.push_back(funcNode);
+            symbolStack->pop();
+            continue;
+        }
+        if(accept(Symbols::sys_procedure)) {
+            ProcNode *procNode;
+            SymbolProc *proc = new SymbolProc();
+            proc->type = nullptr;
+            scanner.getNextLexem();
 
-                            svar->lex = _lex;
-                            svar->mot = MethodOfTransmission::paramval;
-                            svar->_class = SymbolTypes::vars;
-                            svar->type = baseTable->findInTable("integer")->type;
-                            func->inputParam->add(svar);
-                        }
-                    }
-                }
-			}
-			if(accept(Symbols::semicolon)) {
-				scanner.getNextLexem();
-				if(!accept(Symbols::ident) && !accept(Symbols::sys_var)) {
-					error.printError(Errors::ERROR_EXPRESSION, scanner.getLexem().pos, "Expected identifier.");
-				}
-			}
-		} while(accept(Symbols::ident) || accept(Symbols::sys_var));
-		expect(Symbols::rpar);
-		scanner.getNextLexem();
-		expect(Symbols::colon);
-		scanner.getNextLexem();
-		expect(Symbols::ident);
-		Symbol *typeSymbol = symbolStack->findInTables(scanner.getLexem().lexem);
-		if(typeSymbol == nullptr) {
-			//ERROR it is not a type
-			error.printError(Errors::ERROR_BAD_TYPE, scanner.getLexem().pos, "It is not a type.");
-		}
-		if(typeSymbol->_class == SymbolTypes::types) {
-			func->returnParam = (SymbolType*)typeSymbol;
-                //std::cout <<"func " << (int)(func->returnParam->type->type);
-			func->type = func->returnParam->type;
-		} else {
-			//ERROR it is not a type
-			error.printError(Errors::ERROR_BAD_TYPE, scanner.getLexem().pos, "It is not a type.");
-		}
-		scanner.getNextLexem();
-		expect(Symbols::semicolon);
-		scanner.getNextLexem();
-		//symbolStack->push(func->inputParam);
-		SymbolTable *st = new SymbolTable();
-		SymbolVar *result = new SymbolVar();
-		TextPos pos;
-		Lexem resultlex("result", pos, (int)Symbols::ident,identifier);
-		result->lex = resultlex;
-		result->type = func->type;
-
-		func->inputParam->addFront(result);
-		//st->add(result);
-		symbolStack->push(func->inputParam);
-
-		func->block = block(true, st);
-		func->localParam = st;
-		expect(Symbols::semicolon);
-		scanner.getNextLexem();
-		funcNode->type = func;
-		blockNode->children.push_back(funcNode);
-		symbolStack->pop();
-
-		///for(int i = 0; i < func->localParam->symbolsvec.size(); ++i) {
-        ///    ASM.Add(AsmOperation::asm_pop, rbx);
-		///}
-        ///ASM.Add("mov rsp, rbp");
-        ///ASM.Add("pop rbp");
-		///ASM.Add("ret");
-		continue;
-	 }
-	 if(accept(Symbols::sys_procedure)) {
-		ProcNode *procNode;
-		SymbolProc *proc = new SymbolProc();
-		proc->type = nullptr;
-		scanner.getNextLexem();
-
-		if(expect(Symbols::ident)) {
-			 procNode = new ProcNode(scanner.getLexem());
-			 proc->lex = scanner.getLexem();
-			 proc->type = nullptr;
-			 scanner.getNextLexem();
-		}
-        ///ASMOther.Add("section", ".text");
-		///ASM.Add(proc->lex.lexem+":");
-		///ASM.Add("push rbp");
-		///ASM.Add("mov rbp, rsp");
-
-		st->add(proc);
-		expect(Symbols::lpar);
-        scanner.getNextLexem();
-        if(!accept(Symbols::rpar))
-        do {
-            std::vector<SymbolVar*> r = getVarBlock(ifFunc, st, true);
-            for(unsigned int i = 0; i < r.size(); ++i) {
-                if(proc->inputParam->findInTable(r[i]->lex.lexem) != nullptr) {
-                    error.printError(Errors::ERROR_VAR_ALREADY_EXIST, scanner.getLexem().pos, "");
-                }
-                proc->inputParam->add(r[i]);
-                if(r[i]->type->type == DescriptorTypes::arrays) {
-                    if(((DescriptorArray*)r[i]->type)->isOpen) {
-                        //std::cout << "!!!!!!\n";
-                        for(int y = 0; y < ((DescriptorArray*)r[i]->type)->indices.size(); y++) {
-                            SymbolVar *svar = new SymbolVar();
-                            TextPos pos;
-                            Lexem _lex((std::string)(r[i]->lex.lexem+"size"+std::to_string(y)),
-                                          (TextPos)pos, (int)Symbols::intc, (int)literalint);
-
-                            svar->lex = _lex;
-                            svar->mot = MethodOfTransmission::paramval;
-                            svar->_class = SymbolTypes::vars;
-                            svar->type = baseTable->findInTable("integer")->type;
-                            proc->inputParam->add(svar);
-                        }
-                    }
-                }
-            }
-            if(accept(Symbols::semicolon)) {
+            if(expect(Symbols::ident)) {
+                procNode = new ProcNode(scanner.getLexem());
+                proc->lex = scanner.getLexem();
+                proc->type = nullptr;
                 scanner.getNextLexem();
-                if(!accept(Symbols::ident) && !accept(Symbols::sys_var)) {
-                    error.printError(Errors::ERROR_EXPRESSION, scanner.getLexem().pos, "Expected identifier.");
-                }
             }
-        } while(accept(Symbols::ident) || accept(Symbols::sys_var));
 
-        expect(Symbols::rpar);
-        scanner.getNextLexem();
-        expect(Symbols::semicolon);
-        scanner.getNextLexem();
-        symbolStack->push(proc->inputParam);
+            st->add(proc);
+            expect(Symbols::lpar);
+            scanner.getNextLexem();
+            if(!accept(Symbols::rpar))
+            do {
+                std::vector<SymbolVar*> r = getVarBlock(ifFunc, st, true);
+                for(unsigned int i = 0; i < r.size(); ++i) {
+                    if(proc->inputParam->findInTable(r[i]->lex.lexem) != nullptr) {
+                        error.printError(Errors::ERROR_VAR_ALREADY_EXIST, scanner.getLexem().pos, "");
+                    }
+                    proc->inputParam->add(r[i]);
+                    if(r[i]->type->type == DescriptorTypes::arrays) {
+                        if(((DescriptorArray*)r[i]->type)->isOpen) {
+                            //std::cout << "!!!!!!\n";
+                            for(int y = 0; y < ((DescriptorArray*)r[i]->type)->indices.size(); y++) {
+                                SymbolVar *svar = new SymbolVar();
+                                TextPos pos;
+                                Lexem _lex((std::string)(r[i]->lex.lexem+"size"+std::to_string(y)),
+                                            (TextPos)pos, (int)Symbols::intc, (int)literalint);
 
+                                svar->lex = _lex;
+                                svar->mot = MethodOfTransmission::paramval;
+                                svar->_class = SymbolTypes::vars;
+                                svar->type = baseTable->findInTable("integer")->type;
+                                proc->inputParam->add(svar);
+                            }
+                        }
+                    }
+                }
+                if(accept(Symbols::semicolon)) {
+                    scanner.getNextLexem();
+                    if(!accept(Symbols::ident) && !accept(Symbols::sys_var)) {
+                        error.printError(Errors::ERROR_EXPRESSION, scanner.getLexem().pos, "Expected identifier.");
+                    }
+                }
+            } while(accept(Symbols::ident) || accept(Symbols::sys_var));
 
-        SymbolTable *st = new SymbolTable();
-        proc->block = block(true, st);
-        proc->localParam = st;
-        expect(Symbols::semicolon);
-        procNode->type = proc;
-        scanner.getNextLexem();
-        blockNode->children.push_back(procNode);
-        symbolStack->pop();
-
-        ///for(int i = 0; i < proc->localParam->symbolsvec.size(); ++i) {
-        ///    ASM.Add(AsmOperation::asm_pop, rbx);
-		///}
-        ///ASM.Add("mov rsp, rbp");
-        ///ASM.Add("pop rbp");
-        ///ASM.Add("ret");
-        continue;
-    }
-    break;
+            expect(Symbols::rpar);
+            scanner.getNextLexem();
+            expect(Symbols::semicolon);
+            scanner.getNextLexem();
+            symbolStack->push(proc->inputParam);
+            SymbolTable *st = new SymbolTable();
+            proc->block = block(true, st);
+            proc->localParam = st;
+            expect(Symbols::semicolon);
+            procNode->type = proc;
+            scanner.getNextLexem();
+            blockNode->children.push_back(procNode);
+            symbolStack->pop();
+            continue;
+        }
+        break;
 	}
-	///if(!ifFunc) {
-    ///    ASM.Add("section", ".text");
-    ///    ASM.Add("global", "CMAIN");
-    ///    ASM.Add("mark", "CMAIN");
-	///}
 	blockNode->children.push_back(statement(ifFunc));
 	symbolStack->pop();
-	///if(!ifFunc) {
-    ///    ASM.Add(AsmOperation::asm_ret);
-	///}
 	return blockNode;
  }
